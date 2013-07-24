@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -39,10 +40,11 @@ public class MySQLConnect {
     final static String primKeyForFinalList = "CourseCRN";
 
     final static String[] ColsForFinalsList = { "pattern", "start", "end", "block", "day" };
-    final static String[] TypesForFinalsList = { "VARCHAR(10)", "INT", "INT", "VARCHAR(20)", "VARCHAR(10)" };
+    final static String[] TypesForFinalsList = { "VARCHAR(10)", "INT", "INT", "INT", "INT" };
 
     String url = null, user = null, password = null;
-    Connection connect;
+    Connection connect = null;
+    Statement statement = null;
     boolean worked = false;
 
     public static void main(String[] args) {
@@ -55,30 +57,34 @@ public class MySQLConnect {
 
 	String[] Sems = { "201009", "201101", "201109", "201201", "201209", "201301", "201309" };
 	String filePath = "/home/evan/Documents/regleep/csvFiles/";
-		for (String semester : Sems) {
-		    String courseName = "courses" + semester;
-		    String studentName = "students" + semester;
-		    String finalName = "finals" + semester;
-		    String coursePath = filePath + courseName + ".csv";
-		    String studentPath = filePath + studentName + ".csv";
-		    String finalPath = filePath + finalName + ".csv";
-		    prl(coursePath);
-		    prl(studentPath);
-		    pr(conn.generalImporter(coursePath, ColsForCourseList, TypesForCourseList, courseName, "\\t", "\"",
-			    primKeyForCourseList));
-		    prl(conn.generalImporter(studentPath, ColsForStudentList, TypesForStudentList, studentName, "\\t", "\"",
-			    primKeyForStudentList));
-		    if (!semester.equals("201309"))
-			prl(conn.generalImporter(finalPath, ColsForFinalList, TypesForFinalList, finalName, "\\t", "\"",
-				primKeyForFinalList));
-		}
+	if (false)
+	    for (String semester : Sems) {
+		String courseName = "courses" + semester;
+		String studentName = "students" + semester;
+		String finalName = "finals" + semester;
+		String coursePath = filePath + courseName + ".csv";
+		String studentPath = filePath + studentName + ".csv";
+		String finalPath = filePath + finalName + ".csv";
+		prl(coursePath);
+		prl(studentPath);
+		pr(conn.generalImporter(coursePath, ColsForCourseList, TypesForCourseList, courseName, "\\t", "\"",
+			primKeyForCourseList));
+		prl(conn.generalImporter(studentPath, ColsForStudentList, TypesForStudentList, studentName, "\\t",
+			"\"", primKeyForStudentList));
+		if (!semester.equals("201309"))
+		    prl(conn.generalImporter(finalPath, ColsForFinalList, TypesForFinalList, finalName, "\\t", "\"",
+			    primKeyForFinalList));
+	    }
 	String filePath2 = "/home/evan/Documents/regleep/finalSchedules/finalSchedule";
 	for (int i = 1; i < Sems.length - 1; i++) {
 	    prl(conn.loadFinalTables(filePath2 + Sems[i] + ".csv", "finalSchedule" + Sems[i], ColsForFinalsList,
 		    TypesForFinalsList, "\\t"));
 	}
-
 	prl("Done!");
+    }
+
+    public Connection getConnect() {
+	return connect;
     }
 
     public boolean loadFinalTables(String path, String tableName, String[] cols, String[] types, String reg) {
@@ -108,22 +114,23 @@ public class MySQLConnect {
 		    } else {
 			for (int k = 0; k < rows.length; k += 2) {
 			    //split off days and times and things
-			    String dayString = rows[k].replaceAll("Th", "R");
+			    String dayString = rows[k].replaceAll("TH", "R");
 			    dayString = dayString.replaceAll("-", " ");
 			    String timeString = rows[k + 1].replaceAll(":", "");
 			    String[] times = timeString.split("-", -1);
 			    int t1 = Integer.parseInt(times[0]);
 			    int t2 = Integer.parseInt(times[1]);
-			    if (t1 < 900) {
+			    if (t1 < 800) {
 				t1 += 1200;
 				t2 += 1200;
 			    }
 			    query = "INSERT INTO " + tableName + " (pattern,start,end,block,day) VALUES('" + dayString
-				    + "','" + t1 + "','" + t2 + "','" + table[0][i] + "','" + table[j][1] + "');";
+				    + "','" + t1 + "','" + t2 + "','" + (i-1) + "','" + j + "');";
+			    prl(query);
+			    st.executeUpdate(query);
 			}
 		    }
-		    prl(query);
-		    st.executeUpdate(query);
+
 		}
 	    }
 
@@ -162,9 +169,17 @@ public class MySQLConnect {
     public boolean connect() {
 	try {
 	    connect = DriverManager.getConnection(url, user, password);
+	    statement = connect.createStatement();
 	    worked = true;
 	    return true;
 	} catch (SQLException ex) {
+	    if (statement != null)
+		try {
+		    statement.close();
+		} catch (SQLException e1) {
+		    // TODO Auto-generated catch block
+		    e1.printStackTrace();
+		}
 	    if (connect != null)
 		try {
 		    connect.close();
