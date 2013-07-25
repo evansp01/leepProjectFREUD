@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -56,7 +55,7 @@ public class MySQLConnect {
 
 	String[] Sems = { "201009", "201101", "201109", "201201", "201209", "201301", "201309" };
 	String filePath = "home/evan/Documents/regleep/csvFiles/";
-	if (false)
+	if (true)
 	    for (String semester : Sems) {
 		String courseName = "courses" + semester;
 		String studentName = "students" + semester;
