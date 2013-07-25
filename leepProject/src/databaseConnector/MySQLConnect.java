@@ -44,7 +44,6 @@ public class MySQLConnect {
 
     String url = null, user = null, password = null;
     Connection connect = null;
-    Statement statement = null;
     boolean worked = false;
 
     public static void main(String[] args) {
@@ -56,7 +55,7 @@ public class MySQLConnect {
 	conn.connect();
 
 	String[] Sems = { "201009", "201101", "201109", "201201", "201209", "201301", "201309" };
-	String filePath = "/home/evan/Documents/regleep/csvFiles/";
+	String filePath = "home/evan/Documents/regleep/csvFiles/";
 	if (false)
 	    for (String semester : Sems) {
 		String courseName = "courses" + semester;
@@ -115,6 +114,7 @@ public class MySQLConnect {
 			for (int k = 0; k < rows.length; k += 2) {
 			    //split off days and times and things
 			    String dayString = rows[k].replaceAll("TH", "R");
+			    dayString = dayString.replace("Th", "R");
 			    dayString = dayString.replaceAll("-", " ");
 			    String timeString = rows[k + 1].replaceAll(":", "");
 			    String[] times = timeString.split("-", -1);
@@ -123,6 +123,9 @@ public class MySQLConnect {
 			    if (t1 < 800) {
 				t1 += 1200;
 				t2 += 1200;
+			    }
+			    if(t2 < 800){
+				t2+=1200;
 			    }
 			    query = "INSERT INTO " + tableName + " (pattern,start,end,block,day) VALUES('" + dayString
 				    + "','" + t1 + "','" + t2 + "','" + (i-1) + "','" + j + "');";
@@ -169,22 +172,10 @@ public class MySQLConnect {
     public boolean connect() {
 	try {
 	    connect = DriverManager.getConnection(url, user, password);
-	    statement = connect.createStatement();
 	    worked = true;
 	    return true;
 	} catch (SQLException ex) {
-	    if (statement != null)
-		try {
-		    statement.close();
-		} catch (SQLException e1) {
-		    // TODO Auto-generated catch block
-		    e1.printStackTrace();
-		}
-	    if (connect != null)
-		try {
-		    connect.close();
-		} catch (SQLException e) {
-		}
+	    prl(ex.getMessage());
 	    worked = false;
 	    return false;
 	}
