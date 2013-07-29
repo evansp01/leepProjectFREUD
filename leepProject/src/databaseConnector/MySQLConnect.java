@@ -54,7 +54,7 @@ public class MySQLConnect {
 	conn.connect();
 
 	String[] Sems = { "201009", "201101", "201109", "201201", "201209", "201301", "201309" };
-	String filePath = "home/evan/Documents/regleep/csvFiles/";
+	String filePath = "/home/dana/Documents/regleep/csvFiles/";
 	if (true)
 	    for (String semester : Sems) {
 		String courseName = "courses" + semester;
@@ -73,7 +73,7 @@ public class MySQLConnect {
 		    prl(conn.generalImporter(finalPath, ColsForFinalList, TypesForFinalList, finalName, "\\t", "\"",
 			    primKeyForFinalList));
 	    }
-	String filePath2 = "/home/evan/Documents/regleep/finalSchedules/finalSchedule";
+	String filePath2 = "/home/dana/Documents/regleep/finalSchedules/finalSchedule";
 	for (int i = 1; i < Sems.length - 1; i++) {
 	    prl(conn.loadFinalTables(filePath2 + Sems[i] + ".csv", "finalSchedule" + Sems[i], ColsForFinalsList,
 		    TypesForFinalsList, "\\t"));
