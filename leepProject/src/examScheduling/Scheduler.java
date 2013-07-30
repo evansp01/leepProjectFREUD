@@ -35,15 +35,15 @@ public class Scheduler {
 		System.out.println("OOPS");
 		//backtrack!!!
 	    }
-	    
+
 	}
 	printSchedule();
     }
 
-    public void printSchedule(){
-	for(int i =0; i< DAYS; i++){
-	    for(int j=0;j<BLOCKSPERDAY;j++){
-		System.out.print(countAtTime(i,j)+"\t");
+    public void printSchedule() {
+	for (int i = 0; i < DAYS; i++) {
+	    for (int j = 0; j < BLOCKSPERDAY; j++) {
+		System.out.print(countAtTime(i, j) + "\t");
 	    }
 	    System.out.println();
 	}
@@ -80,8 +80,20 @@ public class Scheduler {
 		other = swg.getEdgeSource(e);
 	    }
 	    CourseVertex othr = hm.get(other);
-	    if (othr.day != -1 && othr.block != -1)
-		times[othr.day][othr.block] = TAKEN;
+	    if (othr.day != -1 && othr.block != -1) {
+		if (othr.block == 1 || othr.block == 3) {
+		    times[othr.day][2] = TAKEN;
+		    times[othr.day][othr.block] = TAKEN;
+		} else if (othr.block == 2) {
+		    times[othr.day][1] = TAKEN;
+		    times[othr.day][2] = TAKEN;
+		    times[othr.day][3] = TAKEN;
+
+		} else {
+		    times[othr.day][othr.block] = TAKEN;
+		}
+	    }
+
 	}
 	return times;
     }

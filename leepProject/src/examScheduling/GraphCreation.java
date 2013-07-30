@@ -15,6 +15,7 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import databaseForMainProject.DatabaseConnection;
 
 public class GraphCreation {
+    public static final int ID = 1, CRN = 2, DISTINCTCRN = 1;
 
     public static SimpleWeightedGraph<String, DefaultWeightedEdge> createGraph(String dbname, String url, String usr,
 	    String pass) throws SQLException {
@@ -22,42 +23,54 @@ public class GraphCreation {
 	DatabaseConnection connect = new DatabaseConnection(url, usr, pass);
 	connect.connect();
 	Statement st = connect.getStatement();
-	Statement st2 = connect.getStatement();
 
 	SimpleWeightedGraph<String, DefaultWeightedEdge> g = new SimpleWeightedGraph<String, DefaultWeightedEdge>(
 		DefaultWeightedEdge.class);
-	String query1 = "SELECT DISTINCT CourseCRN FROM " + dbname;
-	ResultSet rs1 = st.executeQuery(query1);
-	while (rs1.next()) {
-	    g.addVertex(rs1.getString(1));
+
+	String getCourseCRNs = "SELECT DISTINCT CourseCRN FROM " + dbname;
+	ResultSet courseCRNs = st.executeQuery(getCourseCRNs);
+
+	while (courseCRNs.next()) {
+	    g.addVertex(courseCRNs.getString(DISTINCTCRN));
 	}
-	rs1.close();
-	String query2 = "SELECT DISTINCT StudentIDNo FROM " + dbname;
-	rs1 = st.executeQuery(query2);
-	while (rs1.next()) {
-	    String id = rs1.getString(1);
-	    String query3 = "SELECT DISTINCT CourseCRN FROM " + dbname + " WHERE StudentIDNo = '" + id + "';";
-	    ResultSet rs2 = st2.executeQuery(query3);
-	    ArrayList<String> crns = new ArrayList<String>();
-	    while (rs2.next()) {
-		crns.add(rs2.getString(1));
-	    }
-	    DefaultWeightedEdge e;
-	    for (int i = 0; i < crns.size(); i++)
-		for (int j = 0; j < i; j++) {
-		    String s = crns.get(i);
-		    String t = crns.get(j);
-		    if (g.containsEdge(s, t)) {
-			e = g.getEdge(s, t);
-			g.setEdgeWeight(e, g.getEdgeWeight(e) + 1);
-		    } else
-			g.addEdge(crns.get(i), crns.get(j));
+	courseCRNs.close();
+
+	String getIDCRNPairs = "SELECT DISTINCT StudentIDNo, CourseCRN FROM " + dbname + " ORDER BY StudentIDNo";
+	ResultSet orderedIDs = st.executeQuery(getIDCRNPairs);
+
+	String currentStudent = null;
+	String nextStudent = null;
+
+	ArrayList<String> crns = null;
+
+	while (orderedIDs.next()) {
+	    if (!(nextStudent = orderedIDs.getString(ID)).equals(currentStudent)) {
+		if (crns != null && crns.size() > 1) {
+		    DefaultWeightedEdge e = null;
+		    String s = null;
+		    String t = null;
+		    for (int i = 0; i < crns.size(); i++)
+			for (int j = 0; j < i; j++) {
+			    s = crns.get(i);
+			    t = crns.get(j);
+			    if (g.containsEdge(s, t)) {
+				e = g.getEdge(s, t);
+				g.setEdgeWeight(e, g.getEdgeWeight(e) + 1);
+			    } else
+				g.addEdge(crns.get(i), crns.get(j));
+			}
 		}
-	    rs2.close();
+		currentStudent = nextStudent;
+		crns = new ArrayList<String>();
+		crns.add(orderedIDs.getString(CRN));
+
+	    } else {
+		crns.add(orderedIDs.getString(CRN));
+	    }
+
 	}
-	rs1.close();
+	orderedIDs.close();
 	st.close();
-	st2.close();
 	connect.close();
 	return g;
     }
