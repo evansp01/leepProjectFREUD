@@ -1,4 +1,4 @@
-package examScheduling;
+package statistics;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
