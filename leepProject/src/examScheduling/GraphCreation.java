@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.jgrapht.alg.BronKerboschCliqueFinder;
@@ -23,8 +24,8 @@ public class GraphCreation {
 	Statement st = connect.getStatement();
 	Statement st2 = connect.getStatement();
 
-	SimpleWeightedGraph<String, DefaultWeightedEdge> g = new SimpleWeightedGraph<String, DefaultWeightedEdge>(DefaultWeightedEdge.class);
-
+	SimpleWeightedGraph<String, DefaultWeightedEdge> g = new SimpleWeightedGraph<String, DefaultWeightedEdge>(
+		DefaultWeightedEdge.class);
 	String query1 = "SELECT DISTINCT CourseCRN FROM " + dbname;
 	ResultSet rs1 = st.executeQuery(query1);
 	while (rs1.next()) {
@@ -49,39 +50,41 @@ public class GraphCreation {
 		    if (g.containsEdge(s, t)) {
 			e = g.getEdge(s, t);
 			g.setEdgeWeight(e, g.getEdgeWeight(e) + 1);
-		    }
-		    g.addEdge(crns.get(i), crns.get(j));
+		    } else
+			g.addEdge(crns.get(i), crns.get(j));
 		}
 	    rs2.close();
 	}
-
 	rs1.close();
 	st.close();
 	st2.close();
 	connect.close();
 	return g;
-
     }
 
     public static void main(String[] args) {
 	String url = "jdbc:mysql://localhost:3306/leep";
 	String usr = "javauser";
 	String pass = "testpass";
-	SimpleWeightedGraph<String,DefaultWeightedEdge> g = null;
+	SimpleWeightedGraph<String, DefaultWeightedEdge> g = null;
 	try {
-	    g=createGraph("studswfins201301", url, usr, pass);
+	    g = createGraph("studswfins201101", url, usr, pass);
 	} catch (SQLException e) {
-	    // TODO Auto-generated catch block
 	    e.printStackTrace();
 	}
-	BronKerboschCliqueFinder<String, DefaultWeightedEdge> f = new BronKerboschCliqueFinder<String, DefaultWeightedEdge>(g);
-	Collection<Set<String>> s = f.getBiggestMaximalCliques();
-	@SuppressWarnings("unchecked")
-	Set<String>[] q = s.toArray((Set<String>[]) new Set[1]);
-	
-	System.out.println(q.length);
-	System.out.println(q[0].size()+" "+q[1].size());
-	
-	System.out.println(g.toString());
+
+	Scheduler schedule = new Scheduler(g);
+	schedule.Schedule();
+
+	//	BronKerboschCliqueFinder<String, DefaultWeightedEdge> f = new BronKerboschCliqueFinder<String, DefaultWeightedEdge>(
+	//		g);
+	//	Collection<Set<String>> s = f.getBiggestMaximalCliques();
+	//	@SuppressWarnings("unchecked")
+	//	Set<String>[] q = s.toArray((Set<String>[]) new Set[1]);
+	//
+	//	System.out.println(q.length);
+	//	System.out.println(q[0].size() + " " + q[1].size());
+	//
+	//	System.out.println(g.toString());
     }
 }
