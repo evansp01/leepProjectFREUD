@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -17,15 +18,32 @@ import databaseForMainProject.DatabaseConnection;
 public class GraphCreation {
     public static final int ID = 1, CRN = 2, DISTINCTCRN = 1;
 
-    public static SimpleWeightedGraph<String, DefaultWeightedEdge> createGraph(String dbname, String url, String usr,
-	    String pass) throws SQLException {
+    StudentGraph<String, StudentEdge> g;
+    HashMap<String, Student> sm;
+
+    public GraphCreation(String dbname, String url, String usr, String pass) {
+	try {
+	    createGraph(dbname, url, usr, pass);
+	} catch (SQLException e) {
+	}
+    }
+
+    public StudentGraph<String, StudentEdge> getGraph() {
+	return g;
+    }
+
+    public HashMap<String, Student> getStudentMap() {
+	return sm;
+    }
+
+    private void createGraph(String dbname, String url, String usr, String pass) throws SQLException {
 
 	DatabaseConnection connect = new DatabaseConnection(url, usr, pass);
 	connect.connect();
 	Statement st = connect.getStatement();
 
-	SimpleWeightedGraph<String, DefaultWeightedEdge> g = new SimpleWeightedGraph<String, DefaultWeightedEdge>(
-		DefaultWeightedEdge.class);
+	g = new StudentGraph<String, StudentEdge>(StudentEdge.class);
+	sm = new HashMap<>();
 
 	String getCourseCRNs = "SELECT DISTINCT CourseCRN FROM " + dbname;
 	ResultSet courseCRNs = st.executeQuery(getCourseCRNs);
@@ -46,7 +64,9 @@ public class GraphCreation {
 	while (orderedIDs.next()) {
 	    if (!(nextStudent = orderedIDs.getString(ID)).equals(currentStudent)) {
 		if (crns != null && crns.size() > 1) {
-		    DefaultWeightedEdge e = null;
+		    //only count students with more than one exam; the others don't matter
+		    sm.put(currentStudent, new Student(currentStudent));
+		    StudentEdge e = null;
 		    String s = null;
 		    String t = null;
 		    for (int i = 0; i < crns.size(); i++)
@@ -55,9 +75,9 @@ public class GraphCreation {
 			    t = crns.get(j);
 			    if (g.containsEdge(s, t)) {
 				e = g.getEdge(s, t);
-				g.setEdgeWeight(e, g.getEdgeWeight(e) + 1);
+				g.addStudent(e, currentStudent);
 			    } else
-				g.addEdge(crns.get(i), crns.get(j));
+				g.addEdge(crns.get(i), crns.get(j), currentStudent);
 			}
 		}
 		currentStudent = nextStudent;
@@ -72,32 +92,16 @@ public class GraphCreation {
 	orderedIDs.close();
 	st.close();
 	connect.close();
-	return g;
     }
 
     public static void main(String[] args) {
 	String url = "jdbc:mysql://localhost:3306/leep";
 	String usr = "javauser";
 	String pass = "testpass";
-	SimpleWeightedGraph<String, DefaultWeightedEdge> g = null;
-	try {
-	    g = createGraph("studswfins201101", url, usr, pass);
-	} catch (SQLException e) {
-	    e.printStackTrace();
-	}
 
-	Scheduler schedule = new Scheduler(g);
+	GraphCreation f = new GraphCreation("studswfins201101", url, usr, pass);
+
+	Scheduler schedule = new Scheduler(f.getGraph(), f.getStudentMap());
 	schedule.Schedule();
-
-	//	BronKerboschCliqueFinder<String, DefaultWeightedEdge> f = new BronKerboschCliqueFinder<String, DefaultWeightedEdge>(
-	//		g);
-	//	Collection<Set<String>> s = f.getBiggestMaximalCliques();
-	//	@SuppressWarnings("unchecked")
-	//	Set<String>[] q = s.toArray((Set<String>[]) new Set[1]);
-	//
-	//	System.out.println(q.length);
-	//	System.out.println(q[0].size() + " " + q[1].size());
-	//
-	//	System.out.println(g.toString());
     }
 }

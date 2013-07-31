@@ -1,16 +1,13 @@
 package examScheduling;
 
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleWeightedGraph;
-
 public class CourseVertex implements Comparable<CourseVertex> {
-    String name;
-    int wdegree;
-    int degree;
-    int block;
-    int day;
+    private String name;
+    private int wdegree;
+    private int degree;
+    private int block;
+    private int day;
 
-    public CourseVertex(String name, SimpleWeightedGraph<String, DefaultWeightedEdge> g) {
+    public CourseVertex(String name, StudentGraph<String, StudentEdge> g) {
 	this.name = name;
 	wdegree = g.degreeOf(name);
 	degree = g.edgesOf(name).size();
@@ -23,12 +20,24 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	this.day = day;
     }
 
-    public int getDay() {
+    public int day() {
 	return day;
     }
 
-    public int getBlock() {
+    public int block() {
 	return block;
+    }
+
+    public String name() {
+	return name;
+    }
+
+    public int getDegree() {
+	return degree;
+    }
+
+    public int getWeightedDegree() {
+	return wdegree;
     }
 
     @Override
