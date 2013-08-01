@@ -10,6 +10,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * 
+ * @author Evan Palmer
+ * 
+ *         Database connector -- abstracts database connection also includes
+ *         methods for loading the csv files required for the program to run
+ * 
+ */
 //prepared statements
 public class DatabaseConnection {
 
@@ -45,6 +53,15 @@ public class DatabaseConnection {
 
     private String errorString = null;
 
+    /**
+     * 
+     * @param url
+     *            the url of the database to connect to
+     * @param user
+     *            the user of the database
+     * @param password
+     *            the password of the user
+     */
     public DatabaseConnection(String url, String user, String password) {
 	this.url = url;
 	this.user = user;
@@ -53,6 +70,12 @@ public class DatabaseConnection {
 
     }
 
+    /**
+     * Connects to a database with the parameters given in the constructor.
+     * 
+     * @return returns true if successful, false if fails. On failure, the error
+     *         string will be set to the sql message.
+     */
     public boolean connect() {
 	try {
 	    connect = DriverManager.getConnection(url, user, password);
@@ -63,6 +86,9 @@ public class DatabaseConnection {
 	}
     }
 
+    /**
+     * Attempts to close the sql connection
+     */
     public void close() {
 	try {
 	    connect.close();
@@ -70,22 +96,49 @@ public class DatabaseConnection {
 	}
     }
 
+    /**
+     * 
+     * @return returns a statement from the connection.
+     * @throws SQLException
+     *             thrown if the connection is not active
+     */
     public Statement getStatement() throws SQLException {
 	return connect.createStatement();
     }
 
+    /**
+     * 
+     * @return returls the expected delimiter of csv files loaded.
+     */
     public String getDelim() {
 	return DELIM;
     }
 
+    /**
+     * 
+     * @param delim
+     *            sets the delimiter for loading csv files.
+     */
     public void setDelim(String delim) {
 	DELIM = delim;
     }
 
+    /**
+     * 
+     * @return returns a string describing the most recent error.
+     */
     public String getErrorString() {
 	return errorString;
     }
 
+    /**
+     * 
+     * @param fileName
+     *            path to the student schedule
+     * @return returns an integer describing success or failure. A value of 0
+     *         indicates success. Otherwise the error string will describe the
+     *         error
+     */
     public int loadStudentScheudle(String fileName) {
 	int result = 0;
 	result = generalLoader(fileName, StudentTable, ColsForStudentList, TypesForStudentList, DELIM,
@@ -93,12 +146,28 @@ public class DatabaseConnection {
 	return result;
     }
 
+    /**
+     * 
+     * @param fileName
+     *            path to the final schedule
+     * @return returns an integer describing success or failure. A value of 0
+     *         indicates success. Otherwise the error string will describe the
+     *         error
+     */
     public int loadFinalExams(String fileName) {
 	int result = 0;
 	result = generalLoader(fileName, FinalTable, ColsForFinalList, TypesForFinalList, DELIM, null);
 	return result;
     }
 
+    /**
+     * 
+     * @param fileName
+     *            path to the course schedule
+     * @return returns an integer describing success or failure. A value of 0
+     *         indicates success. Otherwise the error string will describe the
+     *         error
+     */
     public int loadCourseOfferings(String fileName) {
 	int result = 0;
 	result = generalLoader(fileName, CourseTable, ColsForCourseList, TypesForCourseList, DELIM,
@@ -106,7 +175,18 @@ public class DatabaseConnection {
 	return result;
     }
 
-    //change this to a prepared statement
+    /**
+     * 
+     * @param cols
+     *            the column names
+     * @param types
+     *            the types corresponding to the column names
+     * @param primKey
+     *            the primary key of the table
+     * @param name
+     *            the name of the table
+     * @return returns a boolean describing success
+     */
     private boolean createTable(String[] cols, String[] types, String primKey, String name) {
 	if (types.length != cols.length) {
 	    return false;
@@ -145,20 +225,19 @@ public class DatabaseConnection {
     /**
      * 
      * @param fn
-     *            --name of the file
-     * @param cols
-     *            --name of columns that we are interested
-     * @param types
-     *            --types associated with the columns (for creating the table)
+     *            filename
      * @param name
-     *            --name of the table to create
+     *            name of table
+     * @param cols
+     *            name of column headers
+     * @param types
+     *            types corresponding to column headers
      * @param delim
-     *            --delimiter of csv file
-     * @return --returns whether or not the creation was successful
+     *            the delimiter to be used
+     * @param pk
+     *            the primary key for the table
+     * @return returns an integer describing success or failure
      */
-
-    //should rename errors -- also this is a general picky loader
-
     private int generalLoader(String fn, String name, String[] cols, String[] types, String delim, String pk) {
 	BufferedReader br = null;
 	PreparedStatement pst = null;
@@ -269,7 +348,13 @@ public class DatabaseConnection {
 
     }
 
-    public static int translateType(String type) {
+    /**
+     * 
+     * @param type
+     *            - the sql type
+     * @return returns a integer describing the java type
+     */
+    private static int translateType(String type) {
 	if (type.toLowerCase().contains("int"))
 	    return INT;
 	if (type.toLowerCase().contains("varchar"))
@@ -277,6 +362,12 @@ public class DatabaseConnection {
 	return UNRECOGNIZED;
     }
 
+    /**
+     * a testing method
+     * 
+     * @param args
+     *            parameters are ignored
+     */
     public static void main(String[] args) {
 
 	String url = "jdbc:mysql://localhost:3306/leep";
