@@ -90,7 +90,7 @@ public class Scheduler {
 		CourseVertex current = pq.remove();
 		if (!attemptToSchedule(current, average, back)) {
 		    success = false;
-		    System.out.println(average + " " + back + " failed");
+		    //		    System.out.println(average + " " + back + " failed");
 		    break;
 		}
 
