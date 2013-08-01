@@ -16,11 +16,10 @@ public class DatabaseConnection {
     //the course sheets
     public static final String CourseTable = "FREUDcourses";
     public static final String[] ColsForCourseList = { "CourseTerm", "PartofTerm", "CourseCRN", "Subject", "Sect",
-	    "MaxEnroll", "ActualEnroll", "CourseTitle", "CrossListCode", "FacFirstName", "FacLastName", "CrseNumb",
-	    "Days", "MeetBeginTime", "MeetEndTime", "CatalogDeptCode" };
+	    "MaxEnroll", "ActualEnroll", "CourseTitle", "FacFirstName", "FacLastName", "CrseNumb", "Days",
+	    "MeetBeginTime", "MeetEndTime", "CatalogDeptCode" };
     public static final String[] TypesForCourseList = { "INT", "VARCHAR(5)", "INT", "VARCHAR(10)", "VARCHAR(5)", "INT",
-	    "INT", "VARCHAR(40)", "VARCHAR(5)", "VARCHAR(20)", "VARCHAR(20)", "INT", "VARCHAR(10)", "INT", "INT",
-	    "VARCHAR(10)" };
+	    "INT", "VARCHAR(40)", "VARCHAR(20)", "VARCHAR(20)", "INT", "VARCHAR(10)", "INT", "INT", "VARCHAR(10)" };
     public static final String primKeyForCourseList = "CourseCRN,Days,MeetBeginTime,MeetEndTime,FacFirstName,FacLastName";
     //the students sheets
     public static final String StudentTable = "FREUDstudents";
@@ -36,6 +35,16 @@ public class DatabaseConnection {
     private Connection connect = null;
     private String DELIM = null;
 
+    //ERROR CODES
+    public static final int SUCCESS = 0, WRONG_NUMBER_OF_COLUMNS = 1, UNEXPECTED_COLUMN_NAME = 2,
+	    COULD_NOT_CREATE_TABLE = 3, ROW_LENGTH_MISMATCH = 4, UNRECOGNIZED_TYPE = 5, FILE_NOT_FOUND = 6,
+	    IO_ERROR = 7, SQL_ERROR = 8;
+
+    //types
+    public static final int UNRECOGNIZED = 0, INT = 1, STRING = 2;
+
+    private String errorString = null;
+
     public DatabaseConnection(String url, String user, String password) {
 	this.url = url;
 	this.user = user;
@@ -49,7 +58,7 @@ public class DatabaseConnection {
 	    connect = DriverManager.getConnection(url, user, password);
 	    return true;
 	} catch (SQLException ex) {
-	    prl(ex.getMessage());
+	    errorString = ex.getMessage();
 	    return false;
 	}
     }
@@ -73,6 +82,10 @@ public class DatabaseConnection {
 	DELIM = delim;
     }
 
+    public String getErrorString() {
+	return errorString;
+    }
+
     public int loadStudentScheudle(String fileName) {
 	int result = 0;
 	result = generalLoader(fileName, StudentTable, ColsForStudentList, TypesForStudentList, DELIM,
@@ -88,7 +101,8 @@ public class DatabaseConnection {
 
     public int loadCourseOfferings(String fileName) {
 	int result = 0;
-	result = generalLoader(fileName, CourseTable, ColsForFinalList, TypesForFinalList, DELIM, primKeyForCourseList);
+	result = generalLoader(fileName, CourseTable, ColsForCourseList, TypesForCourseList, DELIM,
+		primKeyForCourseList);
 	return result;
     }
 
@@ -144,6 +158,7 @@ public class DatabaseConnection {
      */
 
     //should rename errors -- also this is a general picky loader
+
     private int generalLoader(String fn, String name, String[] cols, String[] types, String delim, String pk) {
 	BufferedReader br = null;
 	PreparedStatement pst = null;
@@ -156,17 +171,24 @@ public class DatabaseConnection {
 	    //make sure the column headers line up with the first row of the data
 	    if ((line = br.readLine()) != null) {
 		row = line.split(delim, -1);
-		if (row.length != cols.length)
-		    return 1;
+		if (row.length != cols.length) {
+		    errorString = "Row length mismatch " + row.length + " != " + cols.length;
+		    return WRONG_NUMBER_OF_COLUMNS;
+		}
 		for (int i = 0; i < cols.length; i++) {
-		    if (!row[i].equalsIgnoreCase(cols[i]))
-			return 2;
+		    if (!row[i].replace(" ", "").equalsIgnoreCase(cols[i])) {
+			errorString = "Unexpected column name: " + row[i];
+			return UNEXPECTED_COLUMN_NAME;
+		    }
+
 		}
 	    }
 
 	    //ensure the table is successfully created
-	    if (!createTable(cols, types, pk, name))
-		return 3;
+	    if (!createTable(cols, types, pk, name)) {
+		errorString = "Could not create table";
+		return COULD_NOT_CREATE_TABLE;
+	    }
 
 	    //building the prepared statement
 	    StringBuilder prepStatement = new StringBuilder();
@@ -194,16 +216,21 @@ public class DatabaseConnection {
 		    row = line.split(delim, -1);
 		    //rows must be cols length
 		    if (row.length != cols.length) {
-			return 4;
+			errorString = "row " + rowIndex + " does not have the expected length";
+			return ROW_LENGTH_MISMATCH;
 		    }
 
 		    for (int colIndex = 0; colIndex < cols.length; colIndex++) {
 			switch (switchTypes[colIndex]) {
-			case 1:
-			    pst.setInt(colIndex, Integer.parseInt(row[colIndex]));
+			case INT:
+			    pst.setInt(colIndex + 1, Integer.parseInt(row[colIndex]));
 			    break;
-			case 2:
-			    pst.setString(colIndex, row[colIndex]);
+			case STRING:
+			    pst.setString(colIndex + 1, row[colIndex]);
+			    break;
+			default:
+			    errorString = "Unexpected type found (this shouldn't happen)";
+			    return UNRECOGNIZED_TYPE;
 			}
 		    }
 		    pst.addBatch();
@@ -216,11 +243,14 @@ public class DatabaseConnection {
 	    }
 	    connect.setAutoCommit(true);
 	} catch (FileNotFoundException e) {
-	    return 7;
+	    errorString = "File not found: " + e.getMessage();
+	    return FILE_NOT_FOUND;
 	} catch (IOException e) {
-	    return 8;
+	    errorString = "IO Exception: " + e.getMessage();
+	    return IO_ERROR;
 	} catch (SQLException e) {
-	    return 9;
+	    errorString = "SQL error: " + e.getMessage();
+	    return SQL_ERROR;
 	} finally {
 	    if (br != null) {
 		try {
@@ -234,16 +264,17 @@ public class DatabaseConnection {
 		} catch (SQLException e) {
 		}
 	}
-	return 0;
+	errorString = null;
+	return SUCCESS;
 
     }
 
     public static int translateType(String type) {
 	if (type.toLowerCase().contains("int"))
-	    return 1;
+	    return INT;
 	if (type.toLowerCase().contains("varchar"))
-	    return 2;
-	return 0;
+	    return STRING;
+	return UNRECOGNIZED;
     }
 
     public static void main(String[] args) {
@@ -253,18 +284,9 @@ public class DatabaseConnection {
 	String password = "testpass";
 	DatabaseConnection conn = new DatabaseConnection(url, user, password);
 	conn.connect();
-
-	String[] Sems = { "201009", "201101", "201109", "201201", "201209", "201301", "201309" };
-	String filePath = "home/evan/Documents/regleep/csvFiles/";
-	prl("Done!");
-    }
-
-    public static void prl(Object s) {
-	System.out.println(s.toString());
-    }
-
-    public static void pr(Object s) {
-	System.out.print(s.toString());
+	conn.loadCourseOfferings("/home/evan/Documents/regleep/realTest/courses201209.csv");
+	conn.loadFinalExams("/home/evan/Documents/regleep/realTest/finals201209.csv");
+	conn.loadStudentScheudle("/home/evan/Documents/regleep/realTest/students201209.csv");
     }
 
 }
