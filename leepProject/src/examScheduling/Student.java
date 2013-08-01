@@ -1,5 +1,7 @@
 package examScheduling;
 
+import java.util.Arrays;
+
 public class Student {
 
     private String name = null;
@@ -12,6 +14,12 @@ public class Student {
 
     public String name() {
 	return name;
+    }
+
+    public void resetOccupancy() {
+	for (boolean[] i : blocks) {
+	    Arrays.fill(i, false);
+	}
     }
 
     public void occupy(int day, int block) {

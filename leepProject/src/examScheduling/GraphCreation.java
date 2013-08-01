@@ -4,14 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.PriorityQueue;
-import java.util.Set;
-
-import org.jgrapht.alg.BronKerboschCliqueFinder;
-import org.jgrapht.graph.DefaultWeightedEdge;
-import org.jgrapht.graph.SimpleWeightedGraph;
 
 import databaseForMainProject.DatabaseConnection;
 
@@ -89,6 +82,8 @@ public class GraphCreation {
 	    }
 
 	}
+
+	//could add faculty
 	orderedIDs.close();
 	st.close();
 	connect.close();
@@ -99,7 +94,7 @@ public class GraphCreation {
 	String usr = "javauser";
 	String pass = "testpass";
 
-	GraphCreation f = new GraphCreation("studswfins201101", url, usr, pass);
+	GraphCreation f = new GraphCreation("studswfins201109", url, usr, pass);
 
 	Scheduler schedule = new Scheduler(f.getGraph(), f.getStudentMap());
 	schedule.Schedule();

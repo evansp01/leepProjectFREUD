@@ -9,7 +9,7 @@ import java.util.Set;
 
 public class Scheduler {
 
-    public static final int MAXEXAMSPERDAY = 2, BACKTOBACKLIMIT = 1;
+    public static final int MAXEXAMSPERDAY = 2;
     public static final boolean AVAILABLE = false, TAKEN = true, BACKTOBACK = true;
 
     StudentGraph<String, StudentEdge> swg;
@@ -18,17 +18,15 @@ public class Scheduler {
     HashMap<String, Student> sm;
     private int days = 0, blocksPerDay = 0;
     private boolean[][] backToBack = null;
-    private int averageDegree = 0;
 
     public Scheduler(StudentGraph<String, StudentEdge> g, HashMap<String, Student> sm) {
 	this.swg = g;
 	this.sm = sm;
 	Set<String> verticies = g.vertexSet();
-	pq = new PriorityQueue<>();
 	cm = new HashMap<>();
+	pq = new PriorityQueue<>();
 	for (String s : verticies) {
 	    CourseVertex v = new CourseVertex(s, g);
-	    pq.add(v);
 	    cm.put(s, v);
 	}
     }
@@ -37,12 +35,13 @@ public class Scheduler {
 	int sum = 0;
 	int count = 0;
 	for (CourseVertex c : cm.values()) {
-
 	    sum += c.getDegree();
 	    count++;
-
 	}
-	return sum / count + 1;
+	if (count > 0) {
+	    return sum / count + 1;
+	}
+	return 1;
 
     }
 
@@ -50,9 +49,9 @@ public class Scheduler {
 	return cm.values();
     }
 
-    public boolean[][] getPossibleTimes(String courseName) {
+    public boolean[][] getPossibleTimes(String courseName, int b2blimit) {
 	Set<StudentEdge> adj = swg.edgesOf(courseName);
-	return getPossibleTimes(adj, courseName);
+	return getPossibleTimes(adj, courseName, b2blimit);
     }
 
     //shadow implementation
@@ -66,7 +65,6 @@ public class Scheduler {
 
     public void Schedule() {
 	int[][] backToBack = { { 2, 3 }, { 3, 4 } };
-	averageDegree = getAverageDegree();
 	Schedule(4, 4, backToBack);
 
     }
@@ -79,16 +77,42 @@ public class Scheduler {
 	    this.backToBack[pair[0] - 1][pair[1] - 1] = BACKTOBACK;
 	    this.backToBack[pair[1] - 1][pair[0] - 1] = BACKTOBACK;
 	}
+	boolean success;
+	int startAverage = getAverageDegree();
+	int back = 0;
+	int[] averageTry = { startAverage, (int) (startAverage * 0.5), (int) (startAverage * 1.5), Integer.MAX_VALUE };
+	int currentTry = 0;
+	int average = startAverage;
+	do {
+	    rebuildPQ();
+	    success = true;
+	    while (!pq.isEmpty()) {
+		CourseVertex current = pq.remove();
+		if (!attemptToSchedule(current, average, back)) {
+		    success = false;
+		    System.out.println(average + " " + back + " failed");
+		    break;
+		}
 
-	while (!pq.isEmpty()) {
-	    CourseVertex current = pq.remove();
-	    if (!attemptToSchedule(current)) {
-		System.out.println("OOPS");
-		//backtrack!!!
 	    }
+	    if (++currentTry >= averageTry.length) {
+		currentTry = 0;
+		back++;
+	    }
+	    average = averageTry[currentTry];
 
-	}
+	} while (!success);
+
 	printSchedule();
+    }
+
+    private void rebuildPQ() {
+	pq.clear();
+	pq.addAll(cm.values());
+	for (Student s : sm.values()) {
+	    s.resetOccupancy();
+	}
+
     }
 
     public void printSchedule() {
@@ -109,13 +133,13 @@ public class Scheduler {
 	return count;
     }
 
-    private boolean attemptToSchedule(CourseVertex cv) {
+    private boolean attemptToSchedule(CourseVertex cv, int limitThree, int bblimit) {
 	Set<StudentEdge> adj = swg.edgesOf(cv.name());
-	boolean[][] timeSlots = getPossibleTimes(adj, cv.name());
+	boolean[][] timeSlots = getPossibleTimes(adj, cv.name(), bblimit);
 	for (int day = 0; day < days; day++)
 	    for (int block = 0; block < blocksPerDay; block++) {
 		if (timeSlots[day][block] == AVAILABLE) {
-		    if (block != 2 || adj.size() < averageDegree) {
+		    if (block != 2 || adj.size() < limitThree) {
 			cv.setTime(block, day); //set course time
 			for (StudentEdge e : adj) { //add this occupancy to all students
 			    Iterator<String> studentItr = swg.getStudents(e);
@@ -132,7 +156,7 @@ public class Scheduler {
 	return false;
     }
 
-    private boolean[][] getPossibleTimes(Set<StudentEdge> adj, String name) {
+    private boolean[][] getPossibleTimes(Set<StudentEdge> adj, String name, int bblimit) {
 	boolean[][] times = new boolean[days][blocksPerDay];
 
 	for (StudentEdge e : adj) {
@@ -155,7 +179,7 @@ public class Scheduler {
 
 	    CourseVertex othr = cm.get(other);
 	    if (othr.day() != -1 && othr.block() != -1) {
-		if (e.getWeight() > BACKTOBACKLIMIT) {
+		if (e.getWeight() > bblimit) {
 		    for (int backToBackBlock : backToBackBlocks(othr.block())) {
 			times[othr.day()][backToBackBlock] = TAKEN;
 		    }
