@@ -36,6 +36,20 @@ public class Scheduler {
 	return cm.values();
     }
 
+    public boolean[][] getPossibleTimes(String courseName) {
+	Set<StudentEdge> adj = swg.edgesOf(courseName);
+	return getPossibleTimes(adj, courseName);
+    }
+
+    //shadow implementation
+    //this method should return some format of the 
+    //problems with the current schedule
+    //probably doesn't belong here actually
+    public Object reportProblems() {
+
+	return null;
+    }
+
     public void Schedule() {
 	int[][] backToBack = { { 2, 3 }, { 3, 4 } };
 	Schedule(4, 4, backToBack);
@@ -125,17 +139,9 @@ public class Scheduler {
 	    CourseVertex othr = cm.get(other);
 	    if (othr.day() != -1 && othr.block() != -1) {
 		if (e.getWeight() > BACKTOBACKLIMIT) {
-		    for (int i : backToBackBlocks(othr.block())) {
-			times[othr.day()][othr.block()] = TAKEN;
+		    for (int backToBackBlock : backToBackBlocks(othr.block())) {
+			times[othr.day()][backToBackBlock] = TAKEN;
 		    }
-		    if (othr.block() == 1 || othr.block() == 3) {
-			times[othr.day()][2] = TAKEN;
-		    } else if (othr.block() == 2) {
-			times[othr.day()][1] = TAKEN;
-			times[othr.day()][3] = TAKEN;
-
-		    }
-
 		}
 		times[othr.day()][othr.block()] = TAKEN;
 	    }
