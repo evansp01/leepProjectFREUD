@@ -18,6 +18,7 @@ public class Scheduler {
     HashMap<String, Student> sm;
     private int days = 0, blocksPerDay = 0;
     private boolean[][] backToBack = null;
+    private int averageDegree = 0;
 
     public Scheduler(StudentGraph<String, StudentEdge> g, HashMap<String, Student> sm) {
 	this.swg = g;
@@ -30,6 +31,19 @@ public class Scheduler {
 	    pq.add(v);
 	    cm.put(s, v);
 	}
+    }
+
+    private int getAverageDegree() {
+	int sum = 0;
+	int count = 0;
+	for (CourseVertex c : cm.values()) {
+
+	    sum += c.getDegree();
+	    count++;
+
+	}
+	return sum / count + 1;
+
     }
 
     public Collection<CourseVertex> courseVertices() {
@@ -52,6 +66,7 @@ public class Scheduler {
 
     public void Schedule() {
 	int[][] backToBack = { { 2, 3 }, { 3, 4 } };
+	averageDegree = getAverageDegree();
 	Schedule(4, 4, backToBack);
 
     }
@@ -100,16 +115,18 @@ public class Scheduler {
 	for (int day = 0; day < days; day++)
 	    for (int block = 0; block < blocksPerDay; block++) {
 		if (timeSlots[day][block] == AVAILABLE) {
-		    cv.setTime(block, day); //set course time
-		    for (StudentEdge e : adj) { //add this occupancy to all students
-			Iterator<String> studentItr = swg.getStudents(e);
-			while (studentItr.hasNext()) {
-			    String studentName = studentItr.next();
-			    Student student = sm.get(studentName);
-			    student.occupy(day, block);
+		    if (block != 2 || adj.size() < averageDegree) {
+			cv.setTime(block, day); //set course time
+			for (StudentEdge e : adj) { //add this occupancy to all students
+			    Iterator<String> studentItr = swg.getStudents(e);
+			    while (studentItr.hasNext()) {
+				String studentName = studentItr.next();
+				Student student = sm.get(studentName);
+				student.occupy(day, block);
+			    }
 			}
+			return true;
 		    }
-		    return true;
 		}
 	    }
 	return false;
