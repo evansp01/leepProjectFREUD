@@ -5,9 +5,9 @@ public class Student {
     private String name = null;
     private boolean[][] blocks;
 
-    public Student(String name) {
+    public Student(String name, int days, int blocksPerDay) {
 	this.name = name;
-	blocks = new boolean[Scheduler.DAYS][Scheduler.BLOCKSPERDAY];
+	blocks = new boolean[days][blocksPerDay];
     }
 
     public String name() {

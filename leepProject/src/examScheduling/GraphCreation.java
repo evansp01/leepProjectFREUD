@@ -65,7 +65,7 @@ public class GraphCreation {
 	    if (!(nextStudent = orderedIDs.getString(ID)).equals(currentStudent)) {
 		if (crns != null && crns.size() > 1) {
 		    //only count students with more than one exam; the others don't matter
-		    sm.put(currentStudent, new Student(currentStudent));
+		    sm.put(currentStudent, new Student(currentStudent, 4, 4));
 		    StudentEdge e = null;
 		    String s = null;
 		    String t = null;
