@@ -56,15 +56,15 @@ public class SchedulerCheck {
     	Statement st = connect.getStatement(); 
     	
     	for (int i=0; i<courses.size(); i++) { 
-    		condition = condition + "CourseCRN= " + courses.get(i);  
+    		condition = condition + "t1.CourseCRN= " + courses.get(i);  
     		if (i!=courses.size()-1)  
     			condition = condition + " OR "; 
     		else 
     			condition = condition + " ";  
     	}  
     	
-    	String query = "SELECT StudentIDNo, count(StudentIDNo) FROM (SELECT DISTINCT CourseCRN, StudentIDNo FROM" + sem + ") as t1 WHERE " + condition + 
-    			"GROUP BY StudentIDNo HAVING count(StudentIDNo)>=3"; 
+    	String query = "SELECT t1.StudentIDNo, count(t1.StudentIDNo) FROM (SELECT DISTINCT CourseCRN, StudentIDNo FROM " + sem + ") AS t1  WHERE " + condition + 
+    			"GROUP BY t1.StudentIDNo HAVING count(t1.StudentIDNo)>=3"; 
     	ResultSet result = null;
 		try {
 			result = st.executeQuery(query);
