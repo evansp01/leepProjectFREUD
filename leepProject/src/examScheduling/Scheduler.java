@@ -65,8 +65,44 @@ public class Scheduler {
 
     public void Schedule() {
 	int[][] backToBack = { { 2, 3 }, { 3, 4 } };
-	Schedule(4, 4, backToBack);
+	ScheduleA(4, 4, backToBack);
 
+    }
+
+    public void ScheduleA(int days, int blocksPerDay, int[][] backToBack) {
+	this.days = days;
+	this.blocksPerDay = blocksPerDay;
+	this.backToBack = new boolean[blocksPerDay][blocksPerDay];
+	for (int[] pair : backToBack) {
+	    this.backToBack[pair[0] - 1][pair[1] - 1] = BACKTOBACK;
+	    this.backToBack[pair[1] - 1][pair[0] - 1] = BACKTOBACK;
+	}
+	boolean success = true;
+	rebuildPQ();
+	PriorityQueue<CourseVertex> pq2 = new PriorityQueue<>();
+	while (!pq.isEmpty()) {
+	    CourseVertex current = pq.remove();
+	    if (!attemptToSchedule(current, Integer.MAX_VALUE, 0)) {
+		pq2.add(current);
+		success = false;
+	    }
+	}
+	printSchedule();
+	success = true;
+	System.out.println(pq2.size());
+	while (!pq2.isEmpty()) {
+	    CourseVertex current = pq2.remove();
+	    if (!attemptToSchedule(current, Integer.MAX_VALUE, Integer.MAX_VALUE)) {
+		success = false;
+		System.out.println("breaking");
+		break;
+	    }
+	}
+	if (success == false) {
+	    System.out.println("sadness " + pq2.size());
+	}
+
+	printSchedule();
     }
 
     public void Schedule(int days, int blocksPerDay, int[][] backToBack) {
@@ -170,6 +206,7 @@ public class Scheduler {
 		Student student = sm.get(studentName);
 		for (int i = 0; i < days; i++) {
 		    if (student.gtNExamsInDay(MAXEXAMSPERDAY, i)) {
+			System.out.println("unfortunate " + i +"  "+ name);
 			for (int j = 0; j < blocksPerDay; j++) {
 			    times[i][j] = TAKEN;
 			}

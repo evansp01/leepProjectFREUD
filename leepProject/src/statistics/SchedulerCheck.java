@@ -88,7 +88,7 @@ public class SchedulerCheck {
     }
 
     public static void main(String[] args) {
-	for (int i = 0; i < Sems.length; i++) {
+	for (int i = 0; i < 1; i++) {
 	    StudentGraph<String, StudentEdge> g = null;
 	    HashMap<String, Student> sm = null;
 	    SchedulerCheck initCheck = new SchedulerCheck();
@@ -100,16 +100,16 @@ public class SchedulerCheck {
 	    Scheduler sched = new Scheduler(g, sm);
 	    sched.Schedule();
 	    System.out.println(Sems[i]);
-	    initCheck.organizeCourses(sched);
+	    //initCheck.organizeCourses(sched);
 
-	    for (int j = 0; j < initCheck.numberOfDays(); j++) {
-		try {
-		    System.out.println("Day " + (j + 1));
-		    initCheck.createQuery(initCheck.coursesOnDay(j), Sems[i]);
-		} catch (SQLException e) {
-		    e.printStackTrace();
-		}
-	    }
+	    //	    for (int j = 0; j < initCheck.numberOfDays(); j++) {
+	    //		try {
+	    //		    System.out.println("Day " + (j + 1));
+	    //		    initCheck.createQuery(initCheck.coursesOnDay(j), Sems[i]);
+	    //		} catch (SQLException e) {
+	    //		    e.printStackTrace();
+	    //		}
+	    //	    }
 	    try {
 		initCheck.numB2BFinalsPerStud(Sems[i]);
 	    } catch (SQLException e) {
@@ -137,9 +137,15 @@ public class SchedulerCheck {
 	    while (rs2.next()) {
 		String crn = rs2.getString(1);
 		String dt = crnToTime.get(crn);
-
-		int day = Integer.parseInt("" + dt.charAt(0));
-		int time = Integer.parseInt("" + dt.charAt(1));
+		int day;
+		int time;
+		try {
+		    day = Integer.parseInt("" + dt.charAt(0));
+		    time = Integer.parseInt("" + dt.charAt(1));
+		} catch (Exception e) {
+		    day = -1;
+		    time = -1;
+		}
 		if (time != -1)
 		    exams[day][time] = true;
 	    }
