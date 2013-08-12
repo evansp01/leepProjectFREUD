@@ -1,7 +1,9 @@
 package examScheduling;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.jgrapht.graph.SimpleWeightedGraph;
 
@@ -31,6 +33,21 @@ public class StudentGraph<V, E extends StudentEdge> extends SimpleWeightedGraph<
 
     public Iterator<String> getStudents(E edge) {
 	return edge.getStudents();
+    } 
+    
+    public ArrayList<V> getDependencies(V course) { //accessor method to get all the linked courses relative to one course
+    	V course2;
+    	Set<E> edges = edgesOf(course); 
+    	ArrayList<V> dependents = new ArrayList<>();
+    	for (E edge : edges) {  
+    		course2=getEdgeSource(edge);
+    		if(course2.equals(course)) 
+    			course2=getEdgeTarget(edge); 
+    		dependents.add(course2); 
+    	}
+    	
+		return dependents; 
+    	
     }
 
 }

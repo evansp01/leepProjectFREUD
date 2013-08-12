@@ -87,8 +87,8 @@ public class SchedulerCheck {
 
     }
 
-    public static void main(String[] args) {
-	for (int i = 0; i < Sems.length; i++) {
+  /*  public static void main(String[] args) {
+    	int i = 0;
 	    StudentGraph<String, StudentEdge> g = null;
 	    HashMap<String, Student> sm = null;
 	    SchedulerCheck initCheck = new SchedulerCheck();
@@ -116,9 +116,9 @@ public class SchedulerCheck {
 		// TODO Auto-generated catch block
 		e.printStackTrace();
 	    }
-	}
+	
 
-    }
+    }*/
 
     public void numB2BFinalsPerStud(String swf) throws SQLException {
 	DatabaseConnection connect = new DatabaseConnection(URL, USR, PASS);
@@ -133,9 +133,11 @@ public class SchedulerCheck {
 	    String id = rs1.getString(1);
 	    String query2 = "SELECT DISTINCT CourseCRN FROM " + swf + " WHERE StudentIDNo = '" + id + "';";
 	    ResultSet rs2 = st2.executeQuery(query2);
-	    boolean[][] exams = new boolean[4][4];
+	    boolean[][] exams = new boolean[4][4]; 
+	    ArrayList<String> crns = new ArrayList<>();
 	    while (rs2.next()) {
-		String crn = rs2.getString(1);
+		String crn = rs2.getString(1); 
+		crns.add(crn);
 		String dt = crnToTime.get(crn);
 
 		int day = Integer.parseInt("" + dt.charAt(0));
@@ -147,10 +149,26 @@ public class SchedulerCheck {
 	    if ((temp = backToBack(exams)) != 0)
 		studentsWb2b[temp - 1]++;
 	    if ((temp = triple(exams)) != 0)
-		studentsW3[temp - 1]++;
+		studentsW3[temp - 1]++; 
+	    
+	    for (int i=0; i<crns.size(); i++) { 
+	    	for (int j=0; j<i; j++) { 
+	    		if (sequential(crnToTime.get(crns.get(i)), crnToTime.get(crns.get(j)))) {
+	    			System.out.println("Conflict for Student " + id ); 
+	    			System.out.println(crns.get(i) + " " + crns.get(j)); 
+	    			System.out.println(" ");
+	    		}
+	    	}
+	    }  
+	    
+	   
 	    rs2.close();
 
-	}
+	} 
+	
+//	 System.out.println("crn: 27762 " + crnToTime.get("27762")); 
+//	 System.out.println("crn: 27715 " + crnToTime.get("27715"));
+//	 System.out.println("crn: 27723 " + crnToTime.get("27723"));
 
 	//studentsWb2b[1] -= studentsW3[0];
 	//studentsWb2b[2] -= studentsW3[1];
@@ -165,6 +183,25 @@ public class SchedulerCheck {
 
 	st.close();
 	st2.close();
+    } 
+    
+    private boolean sequential(String s, String t){ 
+    	int day1 = Integer.parseInt("" + s.charAt(0));
+		int time1 = Integer.parseInt("" + s.charAt(1)); 
+		
+		int day2 = Integer.parseInt("" + t.charAt(0));
+		int time2 = Integer.parseInt("" + t.charAt(1)); 
+		
+		if(day1!=day2) 
+			return false; 
+		else if(Math.abs(time1-time2)==1)  
+			if ((time1==0 && time2==1) || (time1==1 && time2==0)) 
+				return false; 
+			else 
+				return true;
+		
+		return false;
+    	
     }
 
     public int backToBack(boolean[][] exams) {
