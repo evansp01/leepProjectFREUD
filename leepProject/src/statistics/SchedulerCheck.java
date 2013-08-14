@@ -35,7 +35,7 @@ public class SchedulerCheck {
 
     HashMap<Integer, ArrayList<String>> daysAndCourses = new HashMap<>();
     HashMap<String, String> crnToTime; 
-    HashMap<String, Student> idToStud;
+    HashMap<String, Student> idToStud; 
 
     public SchedulerCheck() {
 	daysAndCourses.put(DAY1, coursesDay1);
@@ -366,6 +366,78 @@ public class SchedulerCheck {
     	prl();
     	rs1.close();
     	st.close();
+    } 
+    
+    public void largeExamPlacement(Scheduler sched) { 
+    	int firstDays=0; 
+    	int lastDays=0;
+    	for (CourseVertex exam: sched.courseVertices()) { 
+    		if(exam.getEnrollment()>=50) { 
+    			if (exam.day()==0 || exam.day()==1) 
+    				firstDays++;  
+    			else 
+    				lastDays++;
+    		}
+    	}
+    	
+    	int totalDays = firstDays+lastDays; 
+    	prl("Number of large exams in first two days: " + firstDays + " - " + (double) firstDays/totalDays); 
+    	prl("Number of large exams in last two days: " + lastDays + " - " + (double) lastDays/totalDays);  
+    	prl();
+    } 
+    
+    public void printCRNSinDay(int day) {  
+    	prl("------------------------------DAY " + (day+1) + "-------------------------------");
+    	ArrayList<String> courses = daysAndCourses.get(day); 
+    	
+    	ArrayList<String> block1 = new ArrayList<>();  
+    	ArrayList<String> block2 = new ArrayList<>(); 
+    	ArrayList<String> block3 = new ArrayList<>(); 
+    	ArrayList<String> block4 = new ArrayList<>();  
+    	HashMap<Integer, ArrayList<String>> timeToCRNlist = new HashMap<>();  
+    	
+    	timeToCRNlist.put(0, block1); 
+    	timeToCRNlist.put(1, block2); 
+    	timeToCRNlist.put(2, block3); 
+    	timeToCRNlist.put(3, block4);
+    	
+    	for (String CRN : courses) { 
+    		String dt = crnToTime.get(CRN);  
+    		int time = Integer.parseInt("" + dt.charAt(1)); 
+    		timeToCRNlist.get(time).add(CRN);		
+    	}  
+    	
+    	int max1 = Math.max(block1.size(), block2.size()); 
+    	int max2 = Math.max(block3.size(), block4.size()); 
+    	int maxBlockSize = Math.max(max1, max2); 
+    	
+    	prl("|\tBlock 1" + "\t | \t" + "Block 2" + "\t | \t" + "Block 3" + "\t | \t" + "Block 4" + "\t | \t"); 
+    	for (int i=0; i<maxBlockSize; i++) { 
+    		pr("|" + "\t"); 
+    		if(block1.size()>i) 
+    			pr(block1.get(i) + "\t | \t");   
+    		else 
+    			pr(" " + "\t | \t");  
+    		
+    		if(block2.size()>i) 
+    			pr(block2.get(i) + "\t | \t");   
+    		else 
+    			pr(" " + "\t | \t");   
+    		
+    		if(block3.size()>i) 
+    			pr(block3.get(i) + "\t | \t");   
+    		else 
+    			pr(" " + "\t | \t");  
+    		
+    		if(block4.size()>i) 
+    			pr(block4.get(i) + "\t | \t");   
+    		else 
+    			pr(" " + "\t | \t");  
+    		
+    		prl();
+    	} 
+    	
+    	prl();
     }
     
     public static void printArray2D(int[][] array, Object[] cols, Object[] rows) {

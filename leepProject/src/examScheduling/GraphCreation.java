@@ -149,7 +149,13 @@ public class GraphCreation {
 		schedch.numFinalDaysPerStud(sem);  
 		schedch.numExamsPerBlock(sem); 
 		schedch.numStudsPerBlock(schedule); 
-		schedch.miscStats(sem);
+		schedch.miscStats(sem); 
+		schedch.largeExamPlacement(schedule); 
+		
+		schedch.printCRNSinDay(0);  
+		schedch.printCRNSinDay(1); 
+		schedch.printCRNSinDay(2); 
+		schedch.printCRNSinDay(3);
 	}
 	//}
 	//schedule.getOneGoodSchedule(4, 4);  
