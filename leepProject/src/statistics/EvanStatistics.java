@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import databaseConnector.MySQLConnect;
+import databaseForMainProject.DatabaseConnection;
+import examScheduling.Student;
 
 public class EvanStatistics {
 
@@ -30,7 +32,7 @@ public class EvanStatistics {
 
 	try {
 
-	    File file = new File("/home/evan/Documents/regleep/statistics.txt");
+	    File file = new File("/home/dana/Documents/regleep/statistics.txt");
 	    if (toFile)
 		br = new BufferedWriter(new FileWriter(file.getAbsolutePath()));
 	    for (int i = 1; i < Sems.length - 1; i++) {
@@ -45,7 +47,8 @@ public class EvanStatistics {
 		numExamsPerDept(semester, "CatalogDeptCode");
 		numBigCoursePerBlock(semester, 30);
 		numFinalDaysPerStud(semester);
-		numB2BFinalsPerStud(semester);
+		numB2BFinalsPerStud(semester); 
+		miscStats(semester);
 		//buildStudentEdgeGraph(semester);
 	    }
 	    if (toFile) {
@@ -87,7 +90,7 @@ public class EvanStatistics {
 	    rs2.close();
 
 	}
-	g.printToFile("/home/evan/Documents/regleep/graphs/graph" + semester + ".gml");
+	g.printToFile("/home/dana/Documents/regleep/graphs/graph" + semester + ".gml");
 
 	rs1.close();
 
@@ -454,7 +457,60 @@ public class EvanStatistics {
 
 	st.close();
 	st2.close();
+    } 
+    
+    public static void miscStats(String semester) throws SQLException { 
+    	Statement st = con.createStatement();
+    	Statement st2 = con.createStatement(); 
+    	Statement st3 = con.createStatement();
+    	String swf = SWF + semester;
+    	String query1 = "SELECT DISTINCT StudentIDNo FROM " + swf;
+    	ResultSet rs1 = st.executeQuery(query1); 
+    	int num3s, num4s, num5s; 
+    	num3s=0; 
+    	num4s=0; 
+    	num5s=0;
+    	while (rs1.next()) {
+    	    String id = rs1.getString(1); 
+    	    String query2 = "SELECT COUNT(*) FROM " + swf + " WHERE StudentIdNo='" + id + "' AND (finalDay=1 OR finalDay=2)"; 
+    	    ResultSet rs2 = st2.executeQuery(query2); 
+    	    rs2.next(); 
+    	    int numExams = rs2.getInt(1); 
+    	    if (numExams>2) { 
+    	    	if (numExams==3) 
+     			   num3s++; 
+     		   else if (numExams==4) 
+     			   num4s++; 
+     		   else if (numExams==5) 
+     			   num5s++;
+    	    }  
+    	    
+    	    String query3 = "SELECT COUNT(*) FROM " + swf + " WHERE StudentIdNo='" + id + "' AND (finalDay=3 OR finalDay=4)"; 
+    	    ResultSet rs3 = st3.executeQuery(query3);  
+    	    rs3.next(); 
+    	    numExams = rs3.getInt(1); 
+    	    if (numExams>2) { 
+    	    	if (numExams==3) 
+     			   num3s++; 
+     		   else if (numExams==4) 
+     			   num4s++; 
+     		   else if (numExams==5) 
+     			   num5s++;
+    	    }  
+    	    
+    	    rs3.close();
+    	    rs2.close();	  
+    	} 
+    	prl("Number of students with 3 exams in 2 days: " + num3s); 
+    	prl("Number of students with 4 exams in 2 days: " + num4s); 
+    	prl("Number of students with 5 exams in 2 days: " + num5s);
+    	prl();
+    	rs1.close(); 
+    	st3.close();
+    	st2.close();
+    	st.close();
     }
+    
 
     public static void main(String[] args) {
 	try {

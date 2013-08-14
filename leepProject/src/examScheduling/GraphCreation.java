@@ -130,8 +130,8 @@ public class GraphCreation {
 	String url = "jdbc:mysql://localhost:3306/leep";
 	String usr = "javauser";
 	String pass = "testpass";
-
-	GraphCreation f = new GraphCreation("studswfins201109", url, usr, pass);
+	String sem = "201209";
+	GraphCreation f = new GraphCreation("studswfins201209", url, usr, pass);
 
 	Scheduler schedule = new Scheduler(f.getGraph(), f.getStudentMap(), f.getEnrollment(), f.getCrnToFac(), f.getFacToCrn());  
 	//for (int i=0; i<200; i++) { 
@@ -140,11 +140,16 @@ public class GraphCreation {
 		NewestSchedulingStats.backToBackPerStud(schedule); 
 		NewestSchedulingStats.examsInADay(schedule); 
 		NewestSchedulingStats.examsDepCheck(schedule); 
-		
+		System.out.println(" ");
 		//statistics using mysql data
 		SchedulerCheck schedch = new SchedulerCheck(); 
-		schedch.organizeCourses(schedule); 
-		schedch.numB2BFinalsPerStud("studswfins201109");
+		schedch.organizeCourses(schedule);  
+		schedch.makeStudMap(schedule);
+		schedch.numB2BFinalsPerStud(sem); 
+		schedch.numFinalDaysPerStud(sem);  
+		schedch.numExamsPerBlock(sem); 
+		schedch.numStudsPerBlock(schedule); 
+		schedch.miscStats(sem);
 	}
 	//}
 	//schedule.getOneGoodSchedule(4, 4);  

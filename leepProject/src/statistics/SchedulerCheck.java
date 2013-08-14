@@ -1,11 +1,15 @@
 package statistics;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import databaseConnector.MySQLConnect;
 import databaseForMainProject.DatabaseConnection;
 import examScheduling.CourseVertex;
 import examScheduling.GraphCreation;
@@ -18,21 +22,28 @@ public class SchedulerCheck {
 
     static final String[] Sems = { "studswfins201009", "studswfins201101", "studswfins201109", "studswfins201201",
 	    "studswfins201209", "studswfins201301" };
-    static final String URL = "jdbc:mysql://localhost:3306/leep", USR = "javauser", PASS = "testpass";
-    static final int DAY1 = 0, DAY2 = 1, DAY3 = 2, DAY4 = 3;
+    static final String URL = "jdbc:mysql://localhost:3306/leep", USR = "javauser", PASS = "testpass", SWF="studswfins";
+    static final int DAY1 = 0, DAY2 = 1, DAY3 = 2, DAY4 = 3; 
+    static MySQLConnect conn = null;
+    static Connection con = null;  
+    static BufferedWriter br = null;
+    static final boolean toFile = true;
+    static final boolean print = true;
 
     ArrayList<String> coursesDay1 = new ArrayList<String>(), coursesDay2 = new ArrayList<String>(),
 	    coursesDay3 = new ArrayList<String>(), coursesDay4 = new ArrayList<String>();
 
     HashMap<Integer, ArrayList<String>> daysAndCourses = new HashMap<>();
-    HashMap<String, String> crnToTime;
+    HashMap<String, String> crnToTime; 
+    HashMap<String, Student> idToStud;
 
     public SchedulerCheck() {
 	daysAndCourses.put(DAY1, coursesDay1);
 	daysAndCourses.put(DAY2, coursesDay2);
 	daysAndCourses.put(DAY3, coursesDay3);
 	daysAndCourses.put(DAY4, coursesDay4);
-	crnToTime = new HashMap<>();
+	crnToTime = new HashMap<>(); 
+	idToStud = new HashMap<>();
     }
 
     public int numberOfDays() {
@@ -50,6 +61,12 @@ public class SchedulerCheck {
 	    courseList.add(v.name());
 	    crnToTime.put(v.name(), "" + v.day() + v.block());
 	}
+    } 
+    
+    public void makeStudMap(Scheduler sched) { 
+    	for (Student stud: sched.students()){ 
+    		idToStud.put(stud.name(), stud);
+    	}
     }
 
     public void createQuery(ArrayList<String> courses, String sem) throws SQLException {
@@ -120,11 +137,12 @@ public class SchedulerCheck {
 
     }*/
 
-    public void numB2BFinalsPerStud(String swf) throws SQLException {
+    public void numB2BFinalsPerStud(String semester) throws SQLException {
 	DatabaseConnection connect = new DatabaseConnection(URL, USR, PASS);
 	connect.connect();
 	Statement st = connect.getStatement();
-	Statement st2 = connect.getStatement();
+	Statement st2 = connect.getStatement(); 
+	String swf = SWF + semester;
 	String query1 = "SELECT DISTINCT StudentIDNo FROM " + swf;
 	ResultSet rs1 = st.executeQuery(query1);
 	int[] studentsWb2b = new int[3];
@@ -250,7 +268,119 @@ public class SchedulerCheck {
 	}
 	return trip;
 
+    } 
+    
+    public void numFinalDaysPerStud(String semester) throws SQLException {
+    	DatabaseConnection connect = new DatabaseConnection(URL, USR, PASS);
+    	connect.connect(); 
+    	Statement st = connect.getStatement();
+    	String swf = SWF + semester;
+    	String query1 = "SELECT DISTINCT StudentIDNo FROM " + swf;
+    	ResultSet rs1 = st.executeQuery(query1);
+    	int[][] histogram = new int[4][5];
+    	while (rs1.next()) {
+    	    String id = rs1.getString(1); 
+    	    Student stud = idToStud.get(id);   
+    	    if (stud==null) 
+    	    	continue;
+    	    for (int i=0; i<4; i++) { 
+    	    	int numFinals = stud.examsInDay(i); 
+    	    	histogram[i][numFinals]+=1;
+    	    }
+    	}
+    	prl("  Number of Finals per Final Day: ");
+    	String[] cols = { "Finals", "Zero", "One", "Two", "Three", "Four" };
+    	String[] rows = { "Day 1", "Day 2", "Day 3", "Day 4" };
+    	printArray2D(histogram, cols, rows);
+    	prl();
+    	rs1.close();
+    	st.close();
+        } 
+    
+    public void numExamsPerBlock(String semester) throws SQLException {//here
+    	
+    	int [][] blocks = new int [4][4];
+    	for (int i=0; i<4; i++) { 
+    		ArrayList<String> courses = daysAndCourses.get(i); 
+    		for (String CRN: courses) { 
+    			String dt = crnToTime.get(CRN);  
+    			int time = Integer.parseInt("" + dt.charAt(1)); 
+    			blocks[i][time]++;
+    		}
+    	}
+
+    	prl("  Number of Exams in Each Block: ");
+    	String[] cols = { "Exams", "Block 1", "Block 2", "Block 3", "Block 4" };
+    	String[] rows = { "Day 1", "Day 2", "Day 3", "Day 4" };
+    	printArray2D(blocks, cols, rows);
+    	prl();
+        } 
+    
+    public void numStudsPerBlock(Scheduler sched) throws SQLException {  
+    	int [][] blocks = new int [4][4];
+    	for (CourseVertex course: sched.courseVertices()) { 
+    		int day = course.day(); 
+    		int block = course.block(); 
+    		int enrollment = course.getEnrollment();
+    		blocks[day][block]+=enrollment;
+    	}
+    	
+    	prl("  Number of Students with Exams in Each Block: ");
+    	String[] cols = { "Exams", "Block 1", "Block 2", "Block 3", "Block 4" };
+    	String[] rows = { "Day 1", "Day 2", "Day 3", "Day 4" };
+    	printArray2D(blocks, cols, rows);
+    	prl();
+    	
+    } 
+    
+    public void miscStats(String semester) throws SQLException { 
+    	DatabaseConnection connect = new DatabaseConnection(URL, USR, PASS);
+    	connect.connect(); 
+    	Statement st = connect.getStatement();
+    	String swf = SWF + semester;
+    	String query1 = "SELECT DISTINCT StudentIDNo FROM " + swf;
+    	ResultSet rs1 = st.executeQuery(query1); 
+    	int num3s, num4s, num5s; 
+    	num3s=0; 
+    	num4s=0; 
+    	num5s=0;
+    	while (rs1.next()) {
+    	    String id = rs1.getString(1); 
+    	    Student stud = idToStud.get(id);   
+    	    if (stud==null) 
+    	    	continue;
+    	   int exams;
+    	   if ((exams = stud.examsInDay(0) + stud.examsInDay(1))>2) { 
+    		   if (exams==3) 
+    			   num3s++; 
+    		   else if (exams==4) 
+    			   num4s++; 
+    		   else if (exams==5) 
+    			   num5s++;
+    	   }
+    		  
+    	} 
+    	prl("Number of students with 3 exams in 2 days: " + num3s); 
+    	prl("Number of students with 4 exams in 2 days: " + num4s); 
+    	prl("Number of students with 5 exams in 2 days: " + num5s);
+    	prl();
+    	rs1.close();
+    	st.close();
     }
+    
+    public static void printArray2D(int[][] array, Object[] cols, Object[] rows) {
+    	for (Object c : cols) {
+    	    pr(c.toString() + "\t");
+    	}
+    	prl();
+    	for (int i = 0; i < array.length; i++) {
+    	    pr(rows[i].toString() + "\t");
+    	    for (Object o : array[i])
+    		pr(o.toString() + "\t");
+    	    prl();
+    	}
+        }
+
 
     public static void prl(Object s) {
 	System.out.println(s);
@@ -258,5 +388,10 @@ public class SchedulerCheck {
 
     public static void prl() {
 	System.out.println();
-    }
+    }   
+    
+    public static void pr(Object s) {
+    	System.out.print(s);
+    
+    } 
 }
