@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+//tree set
+
 public class Scheduler {
 
     public static final int MAXEXAMSPERDAY = 2;
@@ -206,7 +208,7 @@ public class Scheduler {
 		Student student = sm.get(studentName);
 		for (int i = 0; i < days; i++) {
 		    if (student.gtNExamsInDay(MAXEXAMSPERDAY, i)) {
-			System.out.println("unfortunate " + i +"  "+ name);
+			System.out.println("unfortunate " + i + "  " + name);
 			for (int j = 0; j < blocksPerDay; j++) {
 			    times[i][j] = TAKEN;
 			}
