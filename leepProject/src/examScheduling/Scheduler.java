@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.Set;
 
 public class Scheduler {
@@ -34,7 +35,9 @@ public class Scheduler {
 	cm = new HashMap<>();
 	pq = new PriorityQueue<>(); 
 	scheduled = new HashMap<>();
-	for (String s : verticies) { 
+	for (String s : verticies) {  
+		if (s=="20170-21184" || s=="21184") 
+			System.out.println("here");
 		scheduled.put(s, false);
 	    CourseVertex v = new CourseVertex(s, g); 
 	    v.enterEnrollment(enroll.get(s));
@@ -239,20 +242,68 @@ public class Scheduler {
     	while(!success) { 
     		success = Schedule(days, blocksPerDay);
     	}
+    } 
+    
+    public HashMap<Integer, ArrayList<Integer>> getB2BInput() { 
+    	HashMap<Integer, ArrayList<Integer>> b2b = new HashMap<>();
+    	Scanner scanner = new Scanner( System.in );  
+    	System.out.println("Final Exam Scheduler - 2013");
+    	System.out.println("Before we get started, we first need to know which slots are considered back to back.");  
+    	String input = "no";
+    	while(!input.equals("yes")) { 
+    		System.out.println("Please type in first back to back block"); 
+    		int block1 = scanner.nextInt(); 
+    		System.out.println("Please type in second back to back block"); 
+    		int block2 = scanner.nextInt();  
+    		
+    		if(b2b.containsKey(block1)) 
+    			b2b.get(block1).add(block2); 
+    		else { 
+    			ArrayList<Integer> conflicts = new ArrayList<>(); 
+    			conflicts.add(block2); 
+    			b2b.put(block1, conflicts);
+    		}  
+    		
+    		if(b2b.containsKey(block2)) 
+    			b2b.get(block1).add(block1); 
+    		else { 
+    			ArrayList<Integer> conflicts = new ArrayList<>(); 
+    			conflicts.add(block1); 
+    			b2b.put(block2, conflicts);
+    		}   
+    		
+    		System.out.println("Ready?(no/yes)"); 
+    		input = scanner.next();
+    			
+    		
+    	}  
+    	
+    	return b2b;
     }
     
     public boolean Schedule(int days, int blocksPerDay) { 
     	this.days = days; 
-    	this.blocksPerDay=blocksPerDay; 
+    	this.blocksPerDay=blocksPerDay;   
+    	HashMap<Integer, ArrayList<Integer>> b2b = new HashMap<>(); 
+    	ArrayList<Integer> temp1 = new ArrayList<>();  
+    	ArrayList<Integer> temp2 = new ArrayList<>();  
+    	ArrayList<Integer> temp3 = new ArrayList<>();  
+    	temp1.add(2); 
+    	temp2.add(1); 
+    	temp2.add(3); 
+    	temp3.add(2); 
+    	b2b.put(1, temp1); 
+    	b2b.put(2, temp2); 
+    	b2b.put(3, temp3);
     	pq.clear(); 
-    	pq.addAll(cm.values());  
+    	pq.addAll(cm.values());   
     	while(!pq.isEmpty()) {  
     		CourseVertex current = pq.remove(); 
     		String CRN = current.name();
     		if (scheduled.get(CRN)) //course has been scheduled 
     			continue; 
     		else { 
-    			if(!scheduleCourse(current))  
+    			if(!scheduleCourse(current, b2b))  
     				return false;
     			
     		}
@@ -263,7 +314,7 @@ public class Scheduler {
     	
     }
     
-    private boolean scheduleCourse(CourseVertex cv) {
+    private boolean scheduleCourse(CourseVertex cv, HashMap<Integer, ArrayList<Integer>> b2b) {
     	
     	int [][] unacc = cv.unacceptability(); //gives the chart of acceptable and favorable exam times  
     	int dayIt, blockIt, foundDay, foundBlock; //variables to iterate through days and blocks 
@@ -320,18 +371,14 @@ public class Scheduler {
     		ArrayList<String> dependents = swg.getDependencies(cv.name()); 
     		for (String CRN : dependents) { 
     			CourseVertex course = cm.get(CRN); 
-    			if(inlineB2B(cv, course))  {
-    				System.out.println(cv.name() + " " + course.name());  
-    				if(isEdgeBetween(cv, course))
-    					System.out.println("yes");
-    			}
+    			
     			if (!scheduled.get(CRN)) { //if course has not been scheduled 
     				//function to make foundDay and foundBlock unavailable 
     				course.removeSlot(foundDay, foundBlock);
     				StudentEdge edge = swg.getEdge(cv.name(), course.name());  
     				check3InaRow(course, edge, foundDay, foundBlock);   
     				if (course.isAvailable(foundDay)) 
-    					checkb2b(course, edge, foundDay, foundBlock); 
+    					checkb2b(course, edge, foundDay, foundBlock, b2b); 
     				course.updateAvailability(); 
     				pq.add(course); //add back course to priority queue
     				
@@ -342,23 +389,7 @@ public class Scheduler {
     	}
     }  
     
-    private boolean inlineB2B(CourseVertex cv, CourseVertex dep){  
-    	if (dep.day()==cv.day()) { 
-			if(cv.block()==1 && dep.block()==2) 
-				return true;
-			else if(cv.block()==2 && dep.block()==1)
-				return true;
-			else if (cv.block()==2 && dep.block()==3) 
-				return true;
-			else if (cv.block()==3 && dep.block()==2) 
-				return true; 
-			
-			return false;
-		}
-    	
-    	return false;
-    }
-    
+   
     private void check3InaRow(CourseVertex cv, StudentEdge e, int day, int block) { 
     	Iterator<String> studItr = e.getStudents();
     	while(studItr.hasNext()) {  
@@ -374,24 +405,31 @@ public class Scheduler {
     
     //the following function can only occur if at least one slot of the day is available, otherwise, it may change a -1 (meaning 
     //completely unacceptable) to a 0
-    private void checkb2b(CourseVertex cv, StudentEdge e, int day, int block) {  
+    private void checkb2b(CourseVertex cv, StudentEdge e, int day, int block, HashMap<Integer, ArrayList<Integer>> b2b) {  
 //    	Iterator<String> studItr = e.getStudents(); 
-//		while (studItr.hasNext()) {
-			if (block == B2B1 || block == B2B2 || block == B2B3) { // if course
-																	// placed in
-																	// a b2b
-																	// slot 
-				int [][] unacc = cv.unacceptability();
-				if (block == B2B1 && unacc[day][B2B2]!=-1)
-					cv.addB2BConflict(day, B2B2); // adds unfavorability to B2B2
-				else if (block == B2B2) { 
-					if(unacc[day][B2B1]!=-1)
-						cv.addB2BConflict(day, B2B1); 
-					if(unacc[day][B2B3]!=-1)
-						cv.addB2BConflict(day, B2B3);
-				} else 
-					if(unacc[day][B2B2]!=-1)
-						cv.addB2BConflict(day, B2B2);
+//		while (studItr.hasNext()) { 
+    	if (b2b.containsKey(block)) { 
+    		ArrayList<Integer> badBlocks = b2b.get(block);
+    		int [][] unacc = cv.unacceptability();  
+    		for (int B2Bblock : badBlocks) { 
+    			if(unacc[day][B2Bblock]!=-1) 
+    				cv.addB2BConflict(day, B2Bblock);
+    		}
+//			if (block == B2B1 || block == B2B2 || block == B2B3) { // if course
+//																	// placed in
+//																	// a b2b
+//																	// slot 
+//				int [][] unacc = cv.unacceptability();
+//				if (block == B2B1 && unacc[day][B2B2]!=-1)
+//					cv.addB2BConflict(day, B2B2); // adds unfavorability to B2B2
+//				else if (block == B2B2) { 
+//					if(unacc[day][B2B1]!=-1)
+//						cv.addB2BConflict(day, B2B1); 
+//					if(unacc[day][B2B3]!=-1)
+//						cv.addB2BConflict(day, B2B3);
+//				} else 
+//					if(unacc[day][B2B2]!=-1)
+//						cv.addB2BConflict(day, B2B2);
 			}
 //		}
     } 

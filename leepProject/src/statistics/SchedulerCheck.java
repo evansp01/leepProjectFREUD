@@ -156,8 +156,9 @@ public class SchedulerCheck {
 	    while (rs2.next()) {
 		String crn = rs2.getString(1); 
 		crns.add(crn);
-		String dt = crnToTime.get(crn);
-
+		String dt = crnToTime.get(crn); 
+		if(dt==null)
+			prl(dt); 
 		int day = Integer.parseInt("" + dt.charAt(0));
 		int time = Integer.parseInt("" + dt.charAt(1));
 		if (time != -1)
@@ -411,28 +412,28 @@ public class SchedulerCheck {
     	int max2 = Math.max(block3.size(), block4.size()); 
     	int maxBlockSize = Math.max(max1, max2); 
     	
-    	prl("|\tBlock 1" + "\t | \t" + "Block 2" + "\t | \t" + "Block 3" + "\t | \t" + "Block 4" + "\t | \t"); 
+    	prl("|\t\tBlock 1" + "\t\t | \t\t" + "Block 2" + "\t\t | \t\t" + "Block 3" + "\t\t | \t\t" + "Block 4" + "\t\t | \t\t"); 
     	for (int i=0; i<maxBlockSize; i++) { 
-    		pr("|" + "\t"); 
+    		pr("|" + "\t\t"); 
     		if(block1.size()>i) 
-    			pr(block1.get(i) + "\t | \t");   
+    			pr(block1.get(i) + "\t\t | \t\t");   
     		else 
-    			pr(" " + "\t | \t");  
+    			pr(" " + "\t\t | \t\t");  
     		
     		if(block2.size()>i) 
-    			pr(block2.get(i) + "\t | \t");   
+    			pr(block2.get(i) + "\t\t | \t\t");   
     		else 
-    			pr(" " + "\t | \t");   
+    			pr(" " + "\t\t | \t\t");   
     		
     		if(block3.size()>i) 
-    			pr(block3.get(i) + "\t | \t");   
+    			pr(block3.get(i) + "\t\t | \t\t");   
     		else 
-    			pr(" " + "\t | \t");  
+    			pr(" " + "\t\t | \t\t");  
     		
     		if(block4.size()>i) 
-    			pr(block4.get(i) + "\t | \t");   
+    			pr(block4.get(i) + "\t\t | \t\t");   
     		else 
-    			pr(" " + "\t | \t");  
+    			pr(" " + "\t\t | \t\t");  
     		
     		prl();
     	} 

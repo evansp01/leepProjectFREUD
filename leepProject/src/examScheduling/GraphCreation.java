@@ -52,18 +52,99 @@ public class GraphCreation {
 
 	DatabaseConnection connect = new DatabaseConnection(url, usr, pass);
 	connect.connect();
-	Statement st = connect.getStatement();
+	Statement st = connect.getStatement(); 
+	Statement cross = connect.getStatement();
 
 	g = new StudentGraph<String, StudentEdge>(StudentEdge.class);
 	sm = new HashMap<>(); 
 	enroll = new HashMap<>(); 
 	crnToFac = new HashMap<>(); 
-	facToCrn = new HashMap<>();
-
+	facToCrn = new HashMap<>(); 
+	HashMap<String, String> crnToCrossList = new HashMap<>(); 
+	
+	String getCrossListed = "SELECT DISTINCT a.CourseTitle, a.CrossListCode, a.CourseCRN, a.ActualEnroll, a.FacLastName, " +
+			"a.FacFirstName FROM " + dbname + " a JOIN " + dbname + " b ON " +
+			"(a.CrossListCode IS NOT NULL AND a.CourseTitle=b.CourseTitle AND a.CourseCRN!=b.CourseCRN)";
+	ResultSet crossListed = cross.executeQuery(getCrossListed);  
+	
+	String courseTitle=null; 
+	String hyphenatedCRN = null; 
+	int enrollment=0; 
+	ArrayList<String> crossListedCourses = new ArrayList<>();  
+	String facname=null;
+	
+	while(crossListed.next()) { 
+		String newTitle = crossListed.getString(1);  
+		if (courseTitle!=null) {  
+			if (newTitle.equals(courseTitle)) {  
+				crossListedCourses.add(crossListed.getString(3));
+				hyphenatedCRN = hyphenatedCRN + "-" + crossListed.getString(3);      
+				enrollment+=crossListed.getInt(4); 
+			} 
+			else { 
+				//new course, add the previously looked at cross-listed vertex to graph  
+				g.addVertex(hyphenatedCRN); 
+				enroll.put(hyphenatedCRN, enrollment);   
+				crnToFac.put(hyphenatedCRN, facname);  
+				
+				if(facToCrn.containsKey(facname)) 
+			    	facToCrn.get(facname).add(hyphenatedCRN); 
+			    else { 
+			    	ArrayList<String> crns = new ArrayList<>(); 
+			    	crns.add(hyphenatedCRN);  
+			    	facToCrn.put(facname, crns);
+			    } 
+				
+				//adds key so a course can be checked if it's cross-listed with the method 'containsKey()'
+				for (String CRN: crossListedCourses) { 
+					crnToCrossList.put(CRN, hyphenatedCRN);
+				}
+				
+				crossListedCourses.clear(); 
+				
+				facname = crossListed.getString(5) + " " + crossListed.getString(6);
+				hyphenatedCRN=crossListed.getString(3);  
+				enrollment=crossListed.getInt(4);
+				crossListedCourses.add(hyphenatedCRN);  
+				courseTitle=newTitle;
+			}
+		} 
+		
+		else { 
+			crossListedCourses.add(crossListed.getString(3));
+			hyphenatedCRN = crossListed.getString(3);      
+			enrollment=crossListed.getInt(4);  
+			facname = crossListed.getString(5) + " " + crossListed.getString(6); 
+			courseTitle=newTitle;
+		}
+		
+		
+	} 
+	
+	g.addVertex(hyphenatedCRN); 
+	enroll.put(hyphenatedCRN, enrollment);   
+	crnToFac.put(hyphenatedCRN, facname);  
+	
+	if(facToCrn.containsKey(facname)) 
+    	facToCrn.get(facname).add(hyphenatedCRN); 
+    else { 
+    	ArrayList<String> crns = new ArrayList<>(); 
+    	crns.add(hyphenatedCRN);  
+    	facToCrn.put(facname, crns);
+    } 
+	
+	//adds key so a course can be checked if it's cross-listed with the method 'containsKey()'
+	for (String CRN: crossListedCourses) { 
+		crnToCrossList.put(CRN, hyphenatedCRN);
+	}
+	
 	String getCourseCRNs = "SELECT DISTINCT CourseCRN, ActualEnroll, FacLastName, FacFirstName FROM " + dbname;
 	ResultSet courseCRNs = st.executeQuery(getCourseCRNs);
 
-	while (courseCRNs.next()) { 
+	while (courseCRNs.next()) {  
+		if (crnToCrossList.containsKey(courseCRNs.getString(DISTINCTCRN))) 
+				continue; 
+		else { //course is not cross listed
 		String facName = courseCRNs.getString(LASTNAME) + " " + courseCRNs.getString(FIRSTNAME);
 	    g.addVertex(courseCRNs.getString(DISTINCTCRN)); 
 	    enroll.put(courseCRNs.getString(DISTINCTCRN), courseCRNs.getInt(ENROLL)); 
@@ -75,7 +156,8 @@ public class GraphCreation {
 	    	ArrayList<String> crns = new ArrayList<>(); 
 	    	crns.add(courseCRNs.getString(DISTINCTCRN));  
 	    	facToCrn.put(facName, crns );
-	    }
+	    	}
+		} 
 	}
 	courseCRNs.close();
 
@@ -100,13 +182,20 @@ public class GraphCreation {
 					for (int i = 0; i < crns.size(); i++)
 						for (int j = 0; j < i; j++) {
 							s = crns.get(i);
-							t = crns.get(j);
+							t = crns.get(j); 
+							if (crnToCrossList.containsKey(s)) {
+								s=crnToCrossList.get(s);
+							}  
+							if (crnToCrossList.containsKey(t)) {
+								t=crnToCrossList.get(t);
+							} 
+							
 							if (g.containsEdge(s, t)) {
 								e = g.getEdge(s, t);
 								g.addStudent(e, currentStudent);
-							} else
-								g.addEdge(crns.get(i), crns.get(j),
-										currentStudent);
+							} else { 	
+								g.addEdge(s, t, currentStudent); 
+							}
 						}
 				}
 				currentStudent = nextStudent;
@@ -145,7 +234,7 @@ public class GraphCreation {
 		SchedulerCheck schedch = new SchedulerCheck(); 
 		schedch.organizeCourses(schedule);  
 		schedch.makeStudMap(schedule);
-		schedch.numB2BFinalsPerStud(sem); 
+		//schedch.numB2BFinalsPerStud(sem); 
 		schedch.numFinalDaysPerStud(sem);  
 		schedch.numExamsPerBlock(sem); 
 		schedch.numStudsPerBlock(schedule); 
