@@ -14,15 +14,15 @@ public class CourseVertex implements Comparable<CourseVertex> {
     private int degree; //unweighted degree
     private int block; //block time for exam
     private int day; //day of exam
-    private boolean scheduled; //returns true if course has been scheduled 
+    private boolean scheduled; //returns true if course has been scheduled  
+    private int numDays, numBlocks;
     private int [][] unacceptability;  
     private int acceptableSlots; 
     private int favorableSlots;  
-    private int enrollment;
+    private int enrollment; 
     
     private static int B2B1=2, B2B2=3, B2B3=4;
     
-    private static final int BLOCKSPERDAY=4, DAYS=4;
 
     /**
      * 
@@ -37,11 +37,23 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	degree = g.edgesOf(name).size();
 	block = -1;
 	day = -1; 
-	scheduled=false; 
-	unacceptability = new int [DAYS][BLOCKSPERDAY]; 
-	acceptableSlots=DAYS*BLOCKSPERDAY; 
-	favorableSlots=DAYS*BLOCKSPERDAY; 
+	scheduled=false;   
+	
+	//the following info is changed in getDayBlockInfo function, it depends on the number of days and blocks 
+	numDays=0; 
+	numBlocks=0;
+	unacceptability = null; 
+	acceptableSlots=0; 
+	favorableSlots=0; 
 	enrollment=0;
+    } 
+    
+    public void getDayBlockInfo(int days, int blocks) {  
+    	numDays=days; 
+    	numBlocks=blocks;
+    	unacceptability = new int [days][blocks]; 
+    	acceptableSlots=days*blocks; 
+    	favorableSlots=days*blocks; 
     }
 
     /**
@@ -146,7 +158,7 @@ public class CourseVertex implements Comparable<CourseVertex> {
     
     public void removeDay(int day) { 
     	//set each block to -1 to denote the total unacceptability of the day
-    	for (int block=0; block<BLOCKSPERDAY; block++){ 
+    	for (int block=0; block<numBlocks; block++){ 
     		unacceptability[day][block]=-1;
     	}
     }   
@@ -180,8 +192,8 @@ public class CourseVertex implements Comparable<CourseVertex> {
     public void updateAvailability(){  
     	acceptableSlots=0; 
     	favorableSlots=0;
-    	for (int day=0; day<DAYS; day++) { 
-    		for (int block=0; block<BLOCKSPERDAY; block++) { 
+    	for (int day=0; day<numDays; day++) { 
+    		for (int block=0; block<numBlocks; block++) { 
     			if(unacceptability[day][block]!=-1) { //-1 means totally unacceptable - meaning three exams in a row for some student 
     				acceptableSlots++;  
     				if (block==B2B1 || block==B2B2 || block==B2B3){  

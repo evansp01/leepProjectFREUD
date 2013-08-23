@@ -137,12 +137,49 @@ public class SchedulerCheck {
 
     }*/
 
-    public void numB2BFinalsPerStud(String semester) throws SQLException {
+    public void numB2BFinalsPerStud(String semester, int days, int blocks, HashMap<Integer, ArrayList<Integer>> b2b) throws SQLException {
 	DatabaseConnection connect = new DatabaseConnection(URL, USR, PASS);
 	connect.connect();
 	Statement st = connect.getStatement();
-	Statement st2 = connect.getStatement(); 
-	String swf = SWF + semester;
+	Statement st2 = connect.getStatement();  
+	Statement cross = connect.getStatement(); 
+	String swf = SWF + semester; 
+	
+	String crossQuery = "SELECT DISTINCT a.CourseTitle, a.CourseCRN FROM " + swf + " a JOIN " + swf + " b ON " +
+			"(a.CrossListCode IS NOT NULL AND a.CourseTitle=b.CourseTitle AND a.CourseCRN!=b.CourseCRN)"; 
+	ResultSet crossListed = cross.executeQuery(crossQuery);  
+	crossListed.next(); 
+	String courseTitle = crossListed.getString(1); 
+	String CRN = crossListed.getString(2); 
+	ArrayList<String> crossListedCourses = new ArrayList<>(); 
+	crossListedCourses.add(CRN);  
+	HashMap<String, String> crnToCLName = new HashMap<>();
+	while(crossListed.next()) { 
+		String newTitle = crossListed.getString(1); 
+		String newCRN = crossListed.getString(2); 
+		
+		if(newTitle.equals(courseTitle)) {  
+			crossListedCourses.add(newCRN);
+			CRN = CRN + "-" + newCRN; 
+		} 
+		
+		else { 
+			for (String course: crossListedCourses) { 
+				crnToCLName.put(course, CRN); 
+			} 
+			
+			crossListedCourses.clear(); 
+			courseTitle = newTitle; 
+			CRN = newCRN; 
+			crossListedCourses.add(CRN);
+		}
+	} 
+	
+	//adding the last crosslisted course to the hashmap
+	for (String course: crossListedCourses) { 
+		crnToCLName.put(course, CRN); 
+	} 
+	
 	String query1 = "SELECT DISTINCT StudentIDNo FROM " + swf;
 	ResultSet rs1 = st.executeQuery(query1);
 	int[] studentsWb2b = new int[3];
@@ -151,28 +188,29 @@ public class SchedulerCheck {
 	    String id = rs1.getString(1);
 	    String query2 = "SELECT DISTINCT CourseCRN FROM " + swf + " WHERE StudentIDNo = '" + id + "';";
 	    ResultSet rs2 = st2.executeQuery(query2);
-	    boolean[][] exams = new boolean[4][4]; 
+	    boolean[][] exams = new boolean[days][blocks]; 
 	    ArrayList<String> crns = new ArrayList<>();
-	    while (rs2.next()) {
-		String crn = rs2.getString(1); 
+	    while (rs2.next()) { 
+		String crn = rs2.getString(1);   
+		if(crnToCLName.containsKey(crn)) { 
+			crn = crnToCLName.get(crn);
+		}
 		crns.add(crn);
 		String dt = crnToTime.get(crn); 
-		if(dt==null)
-			prl(dt); 
 		int day = Integer.parseInt("" + dt.charAt(0));
 		int time = Integer.parseInt("" + dt.charAt(1));
 		if (time != -1)
 		    exams[day][time] = true;
 	    }
 	    int temp = 0;
-	    if ((temp = backToBack(exams)) != 0)
+	    if ((temp = backToBack(exams, b2b)) != 0)
 		studentsWb2b[temp - 1]++;
 	    if ((temp = triple(exams)) != 0)
 		studentsW3[temp - 1]++; 
 	    
 	    for (int i=0; i<crns.size(); i++) { 
 	    	for (int j=0; j<i; j++) { 
-	    		if (sequential(crnToTime.get(crns.get(i)), crnToTime.get(crns.get(j)))) {
+	    		if (sequential(crnToTime.get(crns.get(i)), crnToTime.get(crns.get(j)), b2b)) {
 	    			System.out.println("Conflict for Student " + id ); 
 	    			System.out.println(crns.get(i) + " " + crns.get(j)); 
 	    			System.out.println(" ");
@@ -204,7 +242,7 @@ public class SchedulerCheck {
 	st2.close();
     } 
     
-    private boolean sequential(String s, String t){ 
+    private boolean sequential(String s, String t, HashMap<Integer, ArrayList<Integer>> backToBack) {
     	int day1 = Integer.parseInt("" + s.charAt(0));
 		int time1 = Integer.parseInt("" + s.charAt(1)); 
 		
@@ -214,33 +252,29 @@ public class SchedulerCheck {
 		if(day1!=day2) 
 			return false; 
 		else if(Math.abs(time1-time2)==1)  
-			if ((time1==0 && time2==1) || (time1==1 && time2==0)) 
+			if (!backToBack.containsKey(time1)) 
 				return false; 
 			else 
-				return true;
+				if(backToBack.get(time1).contains(time2))
+					return true;
 		
 		return false;
     	
     }
 
-    public int backToBack(boolean[][] exams) {
-	boolean past;
+    public int backToBack(boolean[][] exams, HashMap<Integer, ArrayList<Integer>> backToBack) {
 	int b2b = 0;
-	for (int j = 0; j < 4; j++) {
-	    past = false;
-	    for (int i = 0; i < 4; i++) {
-		if (exams[j][i]) {
-		    if (i == 1)
-			past = false;
-		    if (past)
-			b2b++;
-		    past = true;
-		} else {
-		    past = false;
+	for (int j = 0; j < exams.length; j++) {
+		for (int i = 0; i<exams[j].length-1; i++ ) { 
+			if(exams[j][i]==true && exams[j][i+1]==true) { 
+				if(backToBack.containsKey(i)) { 
+					if(backToBack.get(i).contains(i+1)) 
+						b2b++;
+				}
+			}
 		}
-
-	    }
-	}
+	
+    }  
 	return b2b;
     }
 
@@ -248,10 +282,10 @@ public class SchedulerCheck {
 	boolean past;
 	boolean doublePast;
 	int trip = 0;
-	for (int j = 0; j < 4; j++) {
+	for (int j = 0; j < exams.length; j++) {
 	    past = false;
 	    doublePast = false;
-	    for (int i = 0; i < 4; i++) {
+	    for (int i = 0; i < exams[j].length; i++) {
 		if (exams[j][i]) {
 		    if (past) {
 			if (doublePast)
@@ -271,7 +305,7 @@ public class SchedulerCheck {
 
     } 
     
-    public void numFinalDaysPerStud(String semester) throws SQLException {
+    public void numFinalDaysPerStud(String semester, int days) throws SQLException {
     	DatabaseConnection connect = new DatabaseConnection(URL, USR, PASS);
     	connect.connect(); 
     	Statement st = connect.getStatement();
@@ -284,13 +318,13 @@ public class SchedulerCheck {
     	    Student stud = idToStud.get(id);   
     	    if (stud==null) 
     	    	continue;
-    	    for (int i=0; i<4; i++) { 
+    	    for (int i=0; i<days; i++) { 
     	    	int numFinals = stud.examsInDay(i); 
     	    	histogram[i][numFinals]+=1;
     	    }
     	}
     	prl("  Number of Finals per Final Day: ");
-    	String[] cols = { "Finals", "Zero", "One", "Two", "Three", "Four" };
+    	String[] cols = { "Finals", "Zero", "One", "Two", "Three", "Four" }; 
     	String[] rows = { "Day 1", "Day 2", "Day 3", "Day 4" };
     	printArray2D(histogram, cols, rows);
     	prl();
@@ -298,10 +332,10 @@ public class SchedulerCheck {
     	st.close();
         } 
     
-    public void numExamsPerBlock(String semester) throws SQLException {//here
+    public void numExamsPerBlock(String semester, int days) throws SQLException {//here
     	
-    	int [][] blocks = new int [4][4];
-    	for (int i=0; i<4; i++) { 
+    	int [][] blocks = new int [4][5];
+    	for (int i=0; i<days; i++) { 
     		ArrayList<String> courses = daysAndCourses.get(i); 
     		for (String CRN: courses) { 
     			String dt = crnToTime.get(CRN);  
@@ -311,14 +345,14 @@ public class SchedulerCheck {
     	}
 
     	prl("  Number of Exams in Each Block: ");
-    	String[] cols = { "Exams", "Block 1", "Block 2", "Block 3", "Block 4" };
+    	String[] cols = { "Exams", "Block 1", "Block 2", "Block 3", "Block 4", "Block 5" };
     	String[] rows = { "Day 1", "Day 2", "Day 3", "Day 4" };
     	printArray2D(blocks, cols, rows);
     	prl();
         } 
     
     public void numStudsPerBlock(Scheduler sched) throws SQLException {  
-    	int [][] blocks = new int [4][4];
+    	int [][] blocks = new int [4][5];
     	for (CourseVertex course: sched.courseVertices()) { 
     		int day = course.day(); 
     		int block = course.block(); 
@@ -327,14 +361,14 @@ public class SchedulerCheck {
     	}
     	
     	prl("  Number of Students with Exams in Each Block: ");
-    	String[] cols = { "Exams", "Block 1", "Block 2", "Block 3", "Block 4" };
+    	String[] cols = { "Exams", "Block 1", "Block 2", "Block 3", "Block 4", "Block 5" };
     	String[] rows = { "Day 1", "Day 2", "Day 3", "Day 4" };
     	printArray2D(blocks, cols, rows);
     	prl();
     	
     } 
     
-    public void miscStats(String semester) throws SQLException { 
+    public void miscStats(String semester, int days) throws SQLException { 
     	DatabaseConnection connect = new DatabaseConnection(URL, USR, PASS);
     	connect.connect(); 
     	Statement st = connect.getStatement();
@@ -358,6 +392,17 @@ public class SchedulerCheck {
     			   num4s++; 
     		   else if (exams==5) 
     			   num5s++;
+    	   } 
+    	   
+    	   if (days==4) { 
+    		   if ((exams = stud.examsInDay(2) + stud.examsInDay(3))>2) { 
+    			   if (exams==3) 
+        			   num3s++; 
+        		   else if (exams==4) 
+        			   num4s++; 
+        		   else if (exams==5) 
+        			   num5s++;
+    		   }
     	   }
     		  
     	} 
@@ -395,12 +440,14 @@ public class SchedulerCheck {
     	ArrayList<String> block2 = new ArrayList<>(); 
     	ArrayList<String> block3 = new ArrayList<>(); 
     	ArrayList<String> block4 = new ArrayList<>();  
+    	ArrayList<String> block5 = new ArrayList<>(); 
     	HashMap<Integer, ArrayList<String>> timeToCRNlist = new HashMap<>();  
     	
     	timeToCRNlist.put(0, block1); 
     	timeToCRNlist.put(1, block2); 
     	timeToCRNlist.put(2, block3); 
-    	timeToCRNlist.put(3, block4);
+    	timeToCRNlist.put(3, block4); 
+    	timeToCRNlist.put(4, block5);
     	
     	for (String CRN : courses) { 
     		String dt = crnToTime.get(CRN);  
@@ -412,7 +459,7 @@ public class SchedulerCheck {
     	int max2 = Math.max(block3.size(), block4.size()); 
     	int maxBlockSize = Math.max(max1, max2); 
     	
-    	prl("|\t\tBlock 1" + "\t\t | \t\t" + "Block 2" + "\t\t | \t\t" + "Block 3" + "\t\t | \t\t" + "Block 4" + "\t\t | \t\t"); 
+    	prl("|\t\tBlock 1" + "\t\t | \t\t" + "Block 2" + "\t\t | \t\t" + "Block 3" + "\t\t | \t\t" + "Block 4" + "\t\t | \t\t" + "Block 5" + "\t\t | \t\t"); 
     	for (int i=0; i<maxBlockSize; i++) { 
     		pr("|" + "\t\t"); 
     		if(block1.size()>i) 
@@ -433,7 +480,12 @@ public class SchedulerCheck {
     		if(block4.size()>i) 
     			pr(block4.get(i) + "\t\t | \t\t");   
     		else 
-    			pr(" " + "\t\t | \t\t");  
+    			pr(" " + "\t\t | \t\t");   
+    		
+    		if(block5.size()>i) 
+    			pr(block5.get(i) + "\t\t | \t\t");   
+    		else 
+    			pr(" " + "\t\t | \t\t");   
     		
     		prl();
     	} 

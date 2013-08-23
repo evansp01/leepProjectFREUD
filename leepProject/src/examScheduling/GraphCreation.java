@@ -12,7 +12,7 @@ import statistics.SchedulerCheck;
 import databaseForMainProject.DatabaseConnection;
 
 public class GraphCreation {
-    public static final int ID = 1, CRN = 2, DISTINCTCRN = 1, ENROLL=2, LASTNAME=3, FIRSTNAME=4;
+    public static final int ID = 1, CRN = 2, DISTINCTCRN = 1, ENROLL=2, LASTNAME=3, FIRSTNAME=4, DAYS=4, BLOCKS=4;
 
     StudentGraph<String, StudentEdge> g;
     HashMap<String, Student> sm; 
@@ -175,7 +175,7 @@ public class GraphCreation {
 				if (crns != null && crns.size() > 1) {
 					// only count students with more than one exam; the others
 					// don't matter
-					sm.put(currentStudent, new Student(currentStudent, 4, 4));
+					sm.put(currentStudent, new Student(currentStudent, DAYS, BLOCKS));
 					StudentEdge e = null;
 					String s = null;
 					String t = null;
@@ -219,33 +219,40 @@ public class GraphCreation {
 	String url = "jdbc:mysql://localhost:3306/leep";
 	String usr = "javauser";
 	String pass = "testpass";
-	String sem = "201209";
-	GraphCreation f = new GraphCreation("studswfins201209", url, usr, pass);
+	String sem = "201209"; 
+	GraphCreation f = new GraphCreation("studswfins201209", url, usr, pass);  
+	boolean useB2B = true;
 
 	Scheduler schedule = new Scheduler(f.getGraph(), f.getStudentMap(), f.getEnrollment(), f.getCrnToFac(), f.getFacToCrn());  
 	//for (int i=0; i<200; i++) { 
-	if(schedule.Schedule(4, 4)) { 
+	//if(schedule.Schedule(4, 4)) {   
+	HashMap<Integer, ArrayList<Integer>> b2b = schedule.getB2BInput(); 
+		while(!schedule.Schedule(DAYS, BLOCKS, b2b, useB2B)) {  
+			f = new GraphCreation("studswfins201209", url, usr, pass);
+			schedule = new Scheduler(f.getGraph(), f.getStudentMap(), f.getEnrollment(), f.getCrnToFac(), f.getFacToCrn());
+		}
 		//statistics using our own data stored in the graph, edges, etc.
-		NewestSchedulingStats.backToBackPerStud(schedule); 
-		NewestSchedulingStats.examsInADay(schedule); 
-		NewestSchedulingStats.examsDepCheck(schedule); 
+//		NewestSchedulingStats.backToBackPerStud(schedule); 
+//		NewestSchedulingStats.examsInADay(schedule); 
+//		NewestSchedulingStats.examsDepCheck(schedule); 
 		System.out.println(" ");
 		//statistics using mysql data
 		SchedulerCheck schedch = new SchedulerCheck(); 
 		schedch.organizeCourses(schedule);  
 		schedch.makeStudMap(schedule);
-		//schedch.numB2BFinalsPerStud(sem); 
-		schedch.numFinalDaysPerStud(sem);  
-		schedch.numExamsPerBlock(sem); 
+		
+		schedch.numB2BFinalsPerStud(sem, DAYS, BLOCKS, b2b); 
+		schedch.numFinalDaysPerStud(sem, DAYS);  
+		schedch.numExamsPerBlock(sem, DAYS); 
 		schedch.numStudsPerBlock(schedule); 
-		schedch.miscStats(sem); 
+		schedch.miscStats(sem, DAYS); 
 		schedch.largeExamPlacement(schedule); 
 		
 		schedch.printCRNSinDay(0);  
 		schedch.printCRNSinDay(1); 
 		schedch.printCRNSinDay(2); 
 		schedch.printCRNSinDay(3);
-	}
+	//}
 	//}
 	//schedule.getOneGoodSchedule(4, 4);  
 	

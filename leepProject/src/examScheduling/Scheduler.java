@@ -237,12 +237,13 @@ public class Scheduler {
     
     //***********************************separating old approach from new implementation approach   
     
-    public void getOneGoodSchedule(int days, int blocksPerDay) { 
-    	boolean success = Schedule(days, blocksPerDay);
-    	while(!success) { 
-    		success = Schedule(days, blocksPerDay);
-    	}
-    } 
+//    public void getOneGoodSchedule(int days, int blocksPerDay) {  
+//    	HashMap<Integer, ArrayList<Integer>> b2b = getB2BInput();
+//    	boolean success = Schedule(days, blocksPerDay, b2b);
+//    	while(success!=true) { 
+//    		success = Schedule(days, blocksPerDay, b2b);
+//    	}
+//    } 
     
     public HashMap<Integer, ArrayList<Integer>> getB2BInput() { 
     	HashMap<Integer, ArrayList<Integer>> b2b = new HashMap<>();
@@ -252,9 +253,9 @@ public class Scheduler {
     	String input = "no";
     	while(!input.equals("yes")) { 
     		System.out.println("Please type in first back to back block"); 
-    		int block1 = scanner.nextInt(); 
+    		int block1 = scanner.nextInt()-1; //-1 just reindexes
     		System.out.println("Please type in second back to back block"); 
-    		int block2 = scanner.nextInt();  
+    		int block2 = scanner.nextInt()-1;  
     		
     		if(b2b.containsKey(block1)) 
     			b2b.get(block1).add(block2); 
@@ -281,20 +282,12 @@ public class Scheduler {
     	return b2b;
     }
     
-    public boolean Schedule(int days, int blocksPerDay) { 
+    public boolean Schedule(int days, int blocksPerDay, HashMap<Integer, ArrayList<Integer>> b2b, boolean useB2B) { 
     	this.days = days; 
-    	this.blocksPerDay=blocksPerDay;   
-    	HashMap<Integer, ArrayList<Integer>> b2b = new HashMap<>(); 
-    	ArrayList<Integer> temp1 = new ArrayList<>();  
-    	ArrayList<Integer> temp2 = new ArrayList<>();  
-    	ArrayList<Integer> temp3 = new ArrayList<>();  
-    	temp1.add(2); 
-    	temp2.add(1); 
-    	temp2.add(3); 
-    	temp3.add(2); 
-    	b2b.put(1, temp1); 
-    	b2b.put(2, temp2); 
-    	b2b.put(3, temp3);
+    	this.blocksPerDay=blocksPerDay;     
+    	for (CourseVertex cv: cm.values()) { 
+    		cv.getDayBlockInfo(days, blocksPerDay);
+    	}
     	pq.clear(); 
     	pq.addAll(cm.values());   
     	while(!pq.isEmpty()) {  
@@ -303,7 +296,7 @@ public class Scheduler {
     		if (scheduled.get(CRN)) //course has been scheduled 
     			continue; 
     		else { 
-    			if(!scheduleCourse(current, b2b))  
+    			if(!scheduleCourse(current, b2b, useB2B))  
     				return false;
     			
     		}
@@ -314,7 +307,7 @@ public class Scheduler {
     	
     }
     
-    private boolean scheduleCourse(CourseVertex cv, HashMap<Integer, ArrayList<Integer>> b2b) {
+    private boolean scheduleCourse(CourseVertex cv, HashMap<Integer, ArrayList<Integer>> b2b, boolean useB2B) {
     	
     	int [][] unacc = cv.unacceptability(); //gives the chart of acceptable and favorable exam times  
     	int dayIt, blockIt, foundDay, foundBlock; //variables to iterate through days and blocks 
@@ -377,7 +370,7 @@ public class Scheduler {
     				course.removeSlot(foundDay, foundBlock);
     				StudentEdge edge = swg.getEdge(cv.name(), course.name());  
     				check3InaRow(course, edge, foundDay, foundBlock);   
-    				if (course.isAvailable(foundDay)) 
+    				if (course.isAvailable(foundDay) && useB2B) 
     					checkb2b(course, edge, foundDay, foundBlock, b2b); 
     				course.updateAvailability(); 
     				pq.add(course); //add back course to priority queue
@@ -406,15 +399,17 @@ public class Scheduler {
     //the following function can only occur if at least one slot of the day is available, otherwise, it may change a -1 (meaning 
     //completely unacceptable) to a 0
     private void checkb2b(CourseVertex cv, StudentEdge e, int day, int block, HashMap<Integer, ArrayList<Integer>> b2b) {  
-//    	Iterator<String> studItr = e.getStudents(); 
-//		while (studItr.hasNext()) { 
+    	Iterator<String> studItr = e.getStudents(); 
+		while (studItr.hasNext()) {  
+		studItr.next();
     	if (b2b.containsKey(block)) { 
     		ArrayList<Integer> badBlocks = b2b.get(block);
     		int [][] unacc = cv.unacceptability();  
     		for (int B2Bblock : badBlocks) { 
     			if(unacc[day][B2Bblock]!=-1) 
     				cv.addB2BConflict(day, B2Bblock);
-    		}
+    		} 
+    	}
 //			if (block == B2B1 || block == B2B2 || block == B2B3) { // if course
 //																	// placed in
 //																	// a b2b
