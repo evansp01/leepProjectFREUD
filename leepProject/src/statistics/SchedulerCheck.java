@@ -332,6 +332,8 @@ public class SchedulerCheck {
     	st.close();
         } 
     
+    
+
     public void numExamsPerBlock(String semester, int days) throws SQLException {//here
     	
     	int [][] blocks = new int [4][5];

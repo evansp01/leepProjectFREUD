@@ -149,6 +149,7 @@ public class Scheduler {
 	while (!pq.isEmpty()) {
 	    CourseVertex current = pq.remove();
 	    String CRN = current.name();
+	    assert scheduled.get(CRN) == cm.get(CRN).isScheduled();
 	    if (!scheduled.get(CRN)) { //course has been scheduled 
 		if (!scheduleCourse(current, b2b, useB2B))
 		    return false;
@@ -186,6 +187,7 @@ public class Scheduler {
 	    ArrayList<String> facDependents = facToCrn.get(facName);
 	    for (String CRN : facDependents) {
 		CourseVertex course = cm.get(CRN);
+		assert scheduled.get(CRN) == cm.get(CRN).isScheduled();
 		if (!scheduled.get(CRN))
 		    course.removeSlot(foundDay, foundBlock);
 	    }
@@ -193,7 +195,7 @@ public class Scheduler {
 	    ArrayList<String> dependents = swg.getDependencies(cv.name());
 	    for (String CRN : dependents) {
 		CourseVertex course = cm.get(CRN);
-
+		assert scheduled.get(CRN) == cm.get(CRN).isScheduled();
 		if (!scheduled.get(CRN)) { //if course has not been scheduled 
 		    //function to make foundDay and foundBlock unavailable 
 		    course.removeSlot(foundDay, foundBlock);
