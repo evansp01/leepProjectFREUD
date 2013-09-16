@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Random;
 import java.util.Scanner;
@@ -26,7 +25,35 @@ public class Scheduler {
     HashMap<String, String> crnToFac;
     HashMap<String, ArrayList<String>> facToCrn;
     private int days = 0, blocksPerDay = 0;
-    private boolean[][] backToBack = null;
+
+    /**
+     * Constructs a scheduling object
+     * 
+     * @param g
+     * @param sm
+     * @param enroll
+     * @param crnFac
+     * @param facCrn
+     */
+    public Scheduler(StudentGraph<String, StudentEdge> g, HashMap<String, Student> sm, HashMap<String, Integer> enroll,
+	    HashMap<String, String> crnFac, HashMap<String, ArrayList<String>> facCrn) {
+	this.swg = g;
+	this.sm = sm;
+	this.crnToFac = crnFac;
+	this.facToCrn = facCrn;
+	Set<String> verticies = g.vertexSet();
+	cm = new HashMap<>();
+	pq = new PriorityQueue<>();
+	scheduled = new HashMap<>();
+	for (String s : verticies) {
+	    if (s == "20170-21184" || s == "21184")
+		System.out.println("here");
+	    scheduled.put(s, false);
+	    CourseVertex v = new CourseVertex(s, g, enroll.get(s));
+	    cm.put(s, v);
+
+	}
+    }
 
     public Collection<CourseVertex> courseVertices() {
 	return cm.values();
@@ -42,11 +69,6 @@ public class Scheduler {
 
     public HashMap<String, CourseVertex> getCourseMap() {
 	return cm;
-    }
-
-    public boolean[][] getPossibleTimes(String courseName, int b2blimit) {
-	Set<StudentEdge> adj = swg.edgesOf(courseName);
-	return getPossibleTimes(adj, courseName, b2blimit);
     }
 
     public void printSchedule() {
@@ -67,57 +89,11 @@ public class Scheduler {
 	return count;
     }
 
-    private boolean[][] getPossibleTimes(Set<StudentEdge> adj, String name, int bblimit) {
-	boolean[][] times = new boolean[days][blocksPerDay];
-
-	for (StudentEdge e : adj) {
-	    String other = null;
-	    if ((other = swg.getEdgeTarget(e)).equals(name)) {
-		other = swg.getEdgeSource(e);
-	    } //set other to refer to the other course
-	    Iterator<String> studentItr = swg.getStudents(e);
-
-	    while (studentItr.hasNext()) {
-		String studentName = studentItr.next();
-		Student student = sm.get(studentName);
-		for (int i = 0; i < days; i++) {
-		    //check that student doesn't already have max # of exams per student on day i 
-		    //if so, make every slot unavailable on day i
-		    if (student.gtNExamsInDay(MAXEXAMSPERDAY, i)) {
-			System.out.println("unfortunate " + i + "  " + name);
-			for (int j = 0; j < blocksPerDay; j++) {
-			    times[i][j] = TAKEN;
-			}
-		    }
-		}
-	    }
-
-	    CourseVertex othr = cm.get(other);
-	    if (othr.day() != -1 && othr.block() != -1) {
-		//check that the number of students that would have back to back exams is less than a limit (bblimit) 
-		//if >limit, make sure no back to back scheduling occurs
-		if (e.getWeight() > bblimit) {
-		    for (int backToBackBlock : backToBackBlocks(othr.block())) {
-			times[othr.day()][backToBackBlock] = TAKEN;
-		    }
-		}
-		//hard constraint - make sure no student scheduled at same time as other exam
-		times[othr.day()][othr.block()] = TAKEN;
-	    }
-	}
-	return times;
-    }
-
-    private Collection<Integer> backToBackBlocks(int blockIn) {
-	LinkedList<Integer> backToBackList = new LinkedList<>();
-	for (int block = 0; block < blocksPerDay; block++) {
-	    if (backToBack[blockIn][block])
-		backToBackList.add(block);
-
-	}
-	return backToBackList;
-    }
-
+    /**
+     * Gets the back to back blocks -- probably belongs in a different place
+     * 
+     * @return
+     */
     public HashMap<Integer, ArrayList<Integer>> getB2BInput() {
 	HashMap<Integer, ArrayList<Integer>> b2b = new HashMap<>();
 	Scanner scanner = new Scanner(System.in);
@@ -146,10 +122,18 @@ public class Scheduler {
 		b2b.put(block2, conflicts);
 	    }
 
-	    System.out.println("Ready?(no/yes)");
-	    input = scanner.next();
+	    System.out.println("Are you done entering back to back blocks? (yes/no)");
+
+	    //makes sure they type something legit
+	    while (true) {
+		input = scanner.next();
+		if ((input.equals("yes") || input.equals("no")))
+		    break;
+		System.out.println("\nPlease type either \"yes\" or \"no\"");
+	    }
 
 	}
+	scanner.close();
 
 	return b2b;
     }
@@ -194,8 +178,14 @@ public class Scheduler {
 	    int foundBlock = dayblock.getSecond();
 	    cv.setTime(foundBlock, foundDay);
 	    scheduled.put(cv.name(), true);
+
 	    //update based on instructor constraint - instructor cannot administer more than two exams in same block
-	    String facName = crnToFac.get(cv.name());
+	    String facName = crnToFac.get(cv.name()); /*
+						       * AT LEAST THIS HASH
+						       * TABLE SHOULD NOT EXIST
+						       * (information could just
+						       * be in the CourseVertex)
+						       */
 	    ArrayList<String> facDependents = facToCrn.get(facName);
 	    for (String CRN : facDependents) {
 		CourseVertex course = cm.get(CRN);
@@ -211,7 +201,7 @@ public class Scheduler {
 		    //function to make foundDay and foundBlock unavailable 
 		    course.removeSlot(foundDay, foundBlock);
 		    StudentEdge edge = swg.getEdge(cv.name(), course.name());
-		    check3InaRow(course, edge, foundDay, foundBlock);
+		    check3InADay(course, edge, foundDay, foundBlock);
 		    if (course.isAvailable(foundDay) && useB2B)
 			checkb2b(course, edge, foundDay, foundBlock, b2b);
 		    course.updateAvailability();
@@ -223,8 +213,17 @@ public class Scheduler {
 	}
     }
 
+    //just seemed more elegant than commenting the code out
     private static final boolean LARGE_CONSTRAINT = false;
 
+    /**
+     * a function which returns acceptable slots for a given course vertex to be
+     * scheduled in
+     * 
+     * @param cv
+     * @return
+     */
+    //I separated this because it could be useful for finding places to add and remove courses
     public ArrayList<Pair> acceptableSlots(CourseVertex cv) {
 	int[][] degreeOfConflicts = cv.degreeOfConflict(); //gives the chart of acceptable and favorable exam times  
 	int dayIt, blockIt; //variables to iterate through days and blocks 
@@ -256,7 +255,7 @@ public class Scheduler {
 	return acceptableTimes;
     }
 
-    private void check3InaRow(CourseVertex cv, StudentEdge e, int day, int block) {
+    private void check3InADay(CourseVertex cv, StudentEdge e, int day, int block) {
 	Iterator<String> studItr = e.getStudents();
 	while (studItr.hasNext()) {
 	    String studID = studItr.next();
@@ -264,7 +263,7 @@ public class Scheduler {
 	    stud.occupy(day, block);
 	    if (stud.gtNExamsInDay(MAXEXAMSPERDAY, day)) { //if student in class has MAXEXAMS already on day i
 		cv.removeDay(day); //then day becomes unavailable for this exam
-		//break; //no other slots can become unavailable - cannot break here, need all students to have block occupied
+		//no other slots can become unavailable - cannot break here, need all students to have block occupied
 	    }
 	}
     }
@@ -276,30 +275,14 @@ public class Scheduler {
 	while (studItr.hasNext()) {
 	    studItr.next();
 	    if (b2b.containsKey(block)) {
-		ArrayList<Integer> badBlocks = b2b.get(block);
-		int[][] unacc = cv.degreeOfConflict();
-		for (int B2Bblock : badBlocks) {
-		    if (unacc[day][B2Bblock] != -1)
-			cv.addB2BConflict(day, B2Bblock);
+		ArrayList<Integer> b2bBlocks = b2b.get(block);
+		int[][] degreeOfConflict = cv.degreeOfConflict();
+		for (int b2bBlock : b2bBlocks) {
+		    if (degreeOfConflict[day][b2bBlock] != CourseVertex.THREE_IN_DAY)
+			cv.addB2BConflict(day, b2bBlock);
 		}
 	    }
-	    //			if (block == B2B1 || block == B2B2 || block == B2B3) { // if course
-	    //																	// placed in
-	    //																	// a b2b
-	    //																	// slot 
-	    //				int [][] unacc = cv.unacceptability();
-	    //				if (block == B2B1 && unacc[day][B2B2]!=-1)
-	    //					cv.addB2BConflict(day, B2B2); // adds unfavorability to B2B2
-	    //				else if (block == B2B2) { 
-	    //					if(unacc[day][B2B1]!=-1)
-	    //						cv.addB2BConflict(day, B2B1); 
-	    //					if(unacc[day][B2B3]!=-1)
-	    //						cv.addB2BConflict(day, B2B3);
-	    //				} else 
-	    //					if(unacc[day][B2B2]!=-1)
-	    //						cv.addB2BConflict(day, B2B2);
 	}
-	//		}
     }
 
     public void printLargeExams(int degree) {

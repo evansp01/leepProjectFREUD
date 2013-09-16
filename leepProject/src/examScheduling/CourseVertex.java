@@ -31,8 +31,9 @@ public class CourseVertex implements Comparable<CourseVertex> {
      * @param g
      *            graph to create vertex from
      */
-    public CourseVertex(String name, StudentGraph<String, StudentEdge> g) {
+    public CourseVertex(String name, StudentGraph<String, StudentEdge> g, int enrollment) {
 	this.name = name;
+	this.enrollment = enrollment;
 	wdegree = g.degreeOf(name);
 	degree = g.edgesOf(name).size();
 	block = -1;
@@ -45,7 +46,6 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	degreeOfConflict = null;
 	acceptableSlots = 0;
 	favorableSlots = 0;
-	enrollment = 0;
     }
 
     public void getDayBlockInfo(int days, int blocks) {
@@ -120,7 +120,7 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	return enrollment;
     }
 
-    public void enterEnrollment(int enroll) {
+    public void setEnrollment(int enroll) {
 	enrollment = enroll;
     }
 
