@@ -14,7 +14,6 @@ public class CourseVertex implements Comparable<CourseVertex> {
     private int degree; //unweighted degree
     private int block; //block time for exam
     private int day; //day of exam
-    private boolean scheduled; //returns true if course has been scheduled  
     private int numDays, numBlocks;
     private int[][] degreeOfConflict;
     private int acceptableSlots;
@@ -38,7 +37,6 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	degree = g.edgesOf(name).size();
 	block = -1;
 	day = -1;
-	scheduled = false;
 
 	//the following info is changed in getDayBlockInfo function, it depends on the number of days and blocks 
 	numDays = 0;
@@ -162,11 +160,7 @@ public class CourseVertex implements Comparable<CourseVertex> {
     }
 
     public boolean isScheduled() {
-	return scheduled;
-    }
-
-    public void schedule() {
-	scheduled = true;
+	return !(day == -1 && block == -1);
     }
 
     public int[][] degreeOfConflict() {

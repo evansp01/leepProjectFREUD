@@ -149,12 +149,9 @@ public class Scheduler {
 	while (!pq.isEmpty()) {
 	    CourseVertex current = pq.remove();
 	    String CRN = current.name();
-	    if (scheduled.get(CRN)) //course has been scheduled 
-		continue;
-	    else {
+	    if (!scheduled.get(CRN)) { //course has been scheduled 
 		if (!scheduleCourse(current, b2b, useB2B))
 		    return false;
-
 	    }
 	}
 	printSchedule();
@@ -205,7 +202,8 @@ public class Scheduler {
 		    if (course.isAvailable(foundDay) && useB2B)
 			checkb2b(course, edge, foundDay, foundBlock, b2b);
 		    course.updateAvailability();
-		    pq.add(course); //add back course to priority queue
+		    //this is not neccesary -- the course has never been removed
+		    //pq.add(course); //add back course to priority queue
 
 		}
 	    }
