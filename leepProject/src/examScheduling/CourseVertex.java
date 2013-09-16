@@ -16,13 +16,13 @@ public class CourseVertex implements Comparable<CourseVertex> {
     private int day; //day of exam
     private boolean scheduled; //returns true if course has been scheduled  
     private int numDays, numBlocks;
-    private int [][] unacceptability;  
-    private int acceptableSlots; 
-    private int favorableSlots;  
-    private int enrollment; 
-    
-    private static int B2B1=2, B2B2=3, B2B3=4;
-    
+    private int[][] degreeOfConflict;
+    private int acceptableSlots;
+    private int favorableSlots;
+    private int enrollment;
+
+    private static int B2B1 = 2, B2B2 = 3, B2B3 = 4;
+    public static int THREE_IN_DAY = -1;
 
     /**
      * 
@@ -36,24 +36,24 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	wdegree = g.degreeOf(name);
 	degree = g.edgesOf(name).size();
 	block = -1;
-	day = -1; 
-	scheduled=false;   
-	
+	day = -1;
+	scheduled = false;
+
 	//the following info is changed in getDayBlockInfo function, it depends on the number of days and blocks 
-	numDays=0; 
-	numBlocks=0;
-	unacceptability = null; 
-	acceptableSlots=0; 
-	favorableSlots=0; 
-	enrollment=0;
-    } 
-    
-    public void getDayBlockInfo(int days, int blocks) {  
-    	numDays=days; 
-    	numBlocks=blocks;
-    	unacceptability = new int [days][blocks]; 
-    	acceptableSlots=days*blocks; 
-    	favorableSlots=days*blocks; 
+	numDays = 0;
+	numBlocks = 0;
+	degreeOfConflict = null;
+	acceptableSlots = 0;
+	favorableSlots = 0;
+	enrollment = 0;
+    }
+
+    public void getDayBlockInfo(int days, int blocks) {
+	numDays = days;
+	numBlocks = blocks;
+	degreeOfConflict = new int[days][blocks];
+	acceptableSlots = days * blocks;
+	favorableSlots = days * blocks;
     }
 
     /**
@@ -110,106 +110,89 @@ public class CourseVertex implements Comparable<CourseVertex> {
      */
     public int getWeightedDegree() {
 	return wdegree;
-    } 
-    
-    public int getAccSlots() { 
-    	return acceptableSlots;
-    }  
-    
-    public int getEnrollment() { 
-    	return enrollment;
-    }
-    
-    public void enterEnrollment(int enroll) { 
-    	enrollment=enroll;
     }
 
-//    @Override
-//    public int compareTo(CourseVertex o) {
-//	if (o == null)
-//	    return 1;
-//	if (o.degree == degree) {
-//	    if (o.wdegree == wdegree) {
-//		return name.compareTo(o.name);
-//	    }
-//	    return -(wdegree - o.wdegree);
-//	}
-//	return -(degree - o.degree);
-//    }  
-    
-    public int compareTo(CourseVertex o) { 
-    	if (o==null) 
-    		return 1; 
-    	if (favorableSlots!=o.favorableSlots) //first check favorable slots
-    		return favorableSlots-o.favorableSlots;   
-    	else if(acceptableSlots!=o.acceptableSlots) 
-    		return acceptableSlots-o.acceptableSlots; //then acceptable
-    	else  if (degree!=o.degree)
-    		return -(degree-o.degree); //then degree
-    	else if (wdegree!=o.wdegree) 
-    		return -(wdegree-o.wdegree); //then weighted degree
-    	else 
-    		return -1;
-    } 
-    
-    public void removeSlot(int day, int block) { 
-    	unacceptability[day][block]=-1;
+    public int getAccSlots() {
+	return acceptableSlots;
     }
-    
-    public void removeDay(int day) { 
-    	//set each block to -1 to denote the total unacceptability of the day
-    	for (int block=0; block<numBlocks; block++){ 
-    		unacceptability[day][block]=-1;
-    	}
-    }   
-    
-    public boolean isAvailable(int day) {  
-    	for (int block : unacceptability[day]) {//returns true if at least one slot is acceptable 
-    		if (block!=-1) //day is unacceptable if all of its slots are -1
-    			return true; 
-    	} 
-    	
-    	return false;
+
+    public int getEnrollment() {
+	return enrollment;
     }
-    
-    public boolean isScheduled(){ 
-    	return scheduled;
-    } 
-    
-    public void schedule() { 
-    	
-    	scheduled=true;
-    }  
-   
-    public int [][] unacceptability() { 
-    	return unacceptability;
-    } 
-    
-    public void addB2BConflict(int day, int block) { 
-    	unacceptability[day][block]++;
+
+    public void enterEnrollment(int enroll) {
+	enrollment = enroll;
     }
-    
-    public void updateAvailability(){  
-    	acceptableSlots=0; 
-    	favorableSlots=0;
-    	for (int day=0; day<numDays; day++) { 
-    		for (int block=0; block<numBlocks; block++) { 
-    			if(unacceptability[day][block]!=-1) { //-1 means totally unacceptable - meaning three exams in a row for some student 
-    				acceptableSlots++;  
-    				if (block==B2B1 || block==B2B2 || block==B2B3){  
-    					if(unacceptability[day][block]<1) //as long as no more than 2 people have b2b exams, consider it favorable 
-    						favorableSlots++; 
-    				
-    				} 
-    				else 
-    					favorableSlots++; //if not a back to back slot, just increase the number of favorable slots
-    			}
-    		}
-    	}
-    }  
-    
-    
-    
-    
-    
+
+    public static final int GREATER = 1, LESS = -1;
+
+    @Override
+    public int compareTo(CourseVertex o) {
+	if (o == null)
+	    return GREATER;
+	if (favorableSlots != o.favorableSlots) //first check favorable slots
+	    return favorableSlots - o.favorableSlots;
+	else if (acceptableSlots != o.acceptableSlots)
+	    return acceptableSlots - o.acceptableSlots; //then acceptable
+	else if (degree != o.degree)
+	    return -(degree - o.degree); //then degree
+	else if (wdegree != o.wdegree)
+	    return -(wdegree - o.wdegree); //then weighted degree
+	else
+	    return LESS;
+    }
+
+    public void removeSlot(int day, int block) {
+	degreeOfConflict[day][block] = THREE_IN_DAY;
+    }
+
+    public void removeDay(int day) {
+	//set each block to -1 to denote the total unacceptability of the day
+	for (int block = 0; block < numBlocks; block++) {
+	    degreeOfConflict[day][block] = THREE_IN_DAY;
+	}
+    }
+
+    public boolean isAvailable(int day) {
+	for (int block : degreeOfConflict[day]) {//returns true if at least one slot is acceptable 
+	    if (block != THREE_IN_DAY) //day is unacceptable if all of its slots are -1
+		return true;
+	}
+	return false;
+    }
+
+    public boolean isScheduled() {
+	return scheduled;
+    }
+
+    public void schedule() {
+	scheduled = true;
+    }
+
+    public int[][] degreeOfConflict() {
+	return degreeOfConflict;
+    }
+
+    public void addB2BConflict(int day, int block) {
+	degreeOfConflict[day][block]++;
+    }
+
+    public void updateAvailability() {
+	acceptableSlots = 0;
+	favorableSlots = 0;
+	for (int day = 0; day < numDays; day++) {
+	    for (int block = 0; block < numBlocks; block++) {
+		if (degreeOfConflict[day][block] != -1) { //-1 means totally unacceptable - meaning three exams in a row for some student 
+		    acceptableSlots++;
+		    if (block == B2B1 || block == B2B2 || block == B2B3) {
+			if (degreeOfConflict[day][block] < 1) //as long as no more than 2 people have b2b exams, consider it favorable 
+			    favorableSlots++;
+
+		    } else
+			favorableSlots++; //if not a back to back slot, just increase the number of favorable slots
+		}
+	    }
+	}
+    }
+
 }
