@@ -5,6 +5,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+
+import com.mysql.jdbc.exceptions.MySQLDataException;
 
 import statistics.SchedulerCheck;
 import databaseForMainProject.DatabaseConnection;
@@ -44,6 +47,58 @@ public class GraphCreation {
 
     public HashMap<String, ArrayList<String>> getFacToCrn() {
 	return facToCrn;
+    }
+
+    public void addToGraph(String CRN, String url, String usr, String pass, StudentGraph g, String dbname)
+	    throws SQLException {
+	DatabaseConnection connect = new DatabaseConnection(url, usr, pass);
+	connect.connect();
+	Statement st = connect.getStatement();
+	Statement cross = connect.getStatement();
+
+	g = new StudentGraph<String, StudentEdge>(StudentEdge.class);
+	sm = new HashMap<>();
+	enroll = new HashMap<>();
+	crnToFac = new HashMap<>();
+	facToCrn = new HashMap<>();
+
+	HashMap<String, String> crnToCrossList = addCrossListedCourses(dbname, cross);
+	//end of replaced thing
+	String getCrosslisted = "SELECT DISTINCT CrossListCode FROM " + dbname + " WHERE CourseCRN = '"
+		+ CRN + "'";
+	ResultSet rs = st.executeQuery(getCrosslisted);
+	LinkedList<String> clcs = new LinkedList<>();
+	while(rs.next()){
+	    clcs.add(rs.getString(1)); //get cross list code
+	}
+	//build query to search for anything
+	//if the course crn is already there, then ignore it
+	
+
+	String getCourseCRNs = "SELECT DISTINCT CourseCRN, ActualEnroll, FacLastName, FacFirstName FROM " + dbname
+		+ " WHERE CourseCRN = '" + CRN + "'";
+	ResultSet courseCRNs = st.executeQuery(getCourseCRNs);
+
+	while (courseCRNs.next()) {
+	    //course is not cross listed
+	    if (!crnToCrossList.containsKey(courseCRNs.getString(DISTINCTCRN))) {
+
+		String facName = courseCRNs.getString(LASTNAME) + " " + courseCRNs.getString(FIRSTNAME);
+		g.addVertex(courseCRNs.getString(DISTINCTCRN));
+		enroll.put(courseCRNs.getString(DISTINCTCRN), courseCRNs.getInt(ENROLL));
+		crnToFac.put(courseCRNs.getString(DISTINCTCRN), facName);
+
+		if (facToCrn.containsKey(facName))
+		    facToCrn.get(facName).add(courseCRNs.getString(DISTINCTCRN));
+		else {
+		    ArrayList<String> crns = new ArrayList<>();
+		    crns.add(courseCRNs.getString(DISTINCTCRN));
+		    facToCrn.put(facName, crns);
+		}
+	    }
+	}
+	courseCRNs.close();
+
     }
 
     //this method is far too large
@@ -139,7 +194,10 @@ public class GraphCreation {
 
     public HashMap<String, String> addCrossListedCourses(String dbname, Statement cross) throws SQLException {
 	HashMap<String, String> crnToCrossList = new HashMap<>();
-	String getCrossListed = getCrossListedQuery(dbname);
+	//I think this query should not include the requirement that the coursetitles be the same as this is not true for all classes
+	String getCrossListed = "SELECT DISTINCT a.CourseTitle, a.CrossListCode, a.CourseCRN, a.ActualEnroll, a.FacLastName, "
+		+ "a.FacFirstName FROM " + dbname + " a JOIN " + dbname + " b ON "
+		+ "(a.CrossListCode IS NOT NULL AND a.CourseTitle=b.CourseTitle AND a.CourseCRN!=b.CourseCRN)";
 
 	//get the query
 	ResultSet crossListed = cross.executeQuery(getCrossListed);
@@ -150,6 +208,8 @@ public class GraphCreation {
 	ArrayList<String> crossListedCourses = new ArrayList<>();
 	String facname = null;
 
+	//HMM I'm PRETTY SURE COURSETITLE_CL should actually be crosslist code
+	//I'll have to ask dana
 	while (crossListed.next()) {
 	    //get the new title
 	    String newTitle = crossListed.getString(COURSETITLE_CL);
@@ -261,10 +321,5 @@ public class GraphCreation {
     private static final int COURSETITLE_CL = 1, CROSSLISTCODE_CL = 2, COURSECRN_CL = 3, ENROLL_CL = 4, FACLAST_CL = 5,
 	    FACFIRST_CL = 6;
 
-    private String getCrossListedQuery(String dbname) {
-	return "SELECT DISTINCT a.CourseTitle, a.CrossListCode, a.CourseCRN, a.ActualEnroll, a.FacLastName, "
-		+ "a.FacFirstName FROM " + dbname + " a JOIN " + dbname + " b ON "
-		+ "(a.CrossListCode IS NOT NULL AND a.CourseTitle=b.CourseTitle AND a.CourseCRN!=b.CourseCRN)";
 
-    }
 }

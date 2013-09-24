@@ -7,8 +7,13 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 
@@ -23,21 +28,25 @@ public class DatabaseConnection {
 
     //the course sheets
     public static final String CourseTable = "FREUDcourses";
+
+    //need to add cross list code here
     public static final String[] ColsForCourseList = { "CourseTerm", "PartofTerm", "CourseCRN", "Subject", "Sect",
-	    "MaxEnroll", "ActualEnroll", "CourseTitle", "FacFirstName", "FacLastName", "CrseNumb", "Days",
-	    "MeetBeginTime", "MeetEndTime", "CatalogDeptCode" };
-    public static final String[] TypesForCourseList = { "INT", "VARCHAR(5)", "INT", "VARCHAR(10)", "VARCHAR(5)", "INT",
-	    "INT", "VARCHAR(40)", "VARCHAR(20)", "VARCHAR(20)", "INT", "VARCHAR(10)", "INT", "INT", "VARCHAR(10)" };
+	    "MaxEnroll", "ActualEnroll", "CourseTitle", "CrossListCode", "FacFirstName", "FacLastName", "CrseNumb",
+	    "Days", "MeetBeginTime", "MeetEndTime", "CatalogDeptCode" };
+    public static final String[] TypesForCourseList = { "VARCHAR(50)", "VARCHAR(5)", "INT", "VARCHAR(10)",
+	    "VARCHAR(5)", "INT", "INT", "VARCHAR(40)", "VARCHAR(5)", "VARCHAR(20)", "VARCHAR(20)", "INT",
+	    "VARCHAR(10)", "INT", "INT", "VARCHAR(10)" };
     public static final String primKeyForCourseList = "CourseCRN,Days,MeetBeginTime,MeetEndTime,FacFirstName,FacLastName";
     //the students sheets
     public static final String StudentTable = "FREUDstudents";
     public static final String[] ColsForStudentList = { "CourseCRN", "StudentIDNo" };
-    public static final String[] TypesForStudentList = { "INT", "VARCHAR(12)" };
+    public static final String[] TypesForStudentList = { "VARCHAR(50)", "VARCHAR(12)" };
     public static final String primKeyForStudentList = "CourseCRN,StudentIDNo";
     //the finals sheets
     public static final String FinalTable = "FREUDfinals";
     public static final String[] ColsForFinalList = { "CourseCRN" };
     public static final String[] TypesForFinalList = { "INT" };
+    public static final String primKeyForFinalList = "CourseCRN";
 
     private String url = null, user = null, password = null;
     private Connection connect = null;
@@ -46,7 +55,7 @@ public class DatabaseConnection {
     //ERROR CODES
     public static final int SUCCESS = 0, WRONG_NUMBER_OF_COLUMNS = 1, UNEXPECTED_COLUMN_NAME = 2,
 	    COULD_NOT_CREATE_TABLE = 3, ROW_LENGTH_MISMATCH = 4, UNRECOGNIZED_TYPE = 5, FILE_NOT_FOUND = 6,
-	    IO_ERROR = 7, SQL_ERROR = 8;
+	    IO_ERROR = 7, SQL_ERROR = 8, NO_CONNECTION = 9;
 
     //types
     public static final int UNRECOGNIZED = 0, INT = 1, STRING = 2;
@@ -78,9 +87,10 @@ public class DatabaseConnection {
      */
     public boolean connect() {
 	try {
+	    Class.forName("org.h2.Driver");
 	    connect = DriverManager.getConnection(url, user, password);
 	    return true;
-	} catch (SQLException ex) {
+	} catch (SQLException | ClassNotFoundException ex) {
 	    errorString = ex.getMessage();
 	    return false;
 	}
@@ -92,7 +102,7 @@ public class DatabaseConnection {
     public void close() {
 	try {
 	    connect.close();
-	} catch (SQLException e) {
+	} catch (Exception e) {
 	}
     }
 
@@ -156,7 +166,7 @@ public class DatabaseConnection {
      */
     public int loadFinalExams(String fileName) {
 	int result = 0;
-	result = generalLoader(fileName, FinalTable, ColsForFinalList, TypesForFinalList, DELIM, null);
+	result = generalLoader(fileName, FinalTable, ColsForFinalList, TypesForFinalList, DELIM, primKeyForFinalList);
 	return result;
     }
 
@@ -243,6 +253,10 @@ public class DatabaseConnection {
 	PreparedStatement pst = null;
 	String line = null;
 	String[] row = null;
+	if (connect == null) {
+	    errorString = "no connection to database available";
+	    return NO_CONNECTION;
+	}
 	int[] switchTypes = new int[cols.length];
 	try {
 
@@ -271,7 +285,7 @@ public class DatabaseConnection {
 
 	    //building the prepared statement
 	    StringBuilder prepStatement = new StringBuilder();
-	    prepStatement.append("INSERT IGNORE INTO ");
+	    prepStatement.append("MERGE INTO ");
 	    prepStatement.append(name);
 	    prepStatement.append("(");
 	    for (int i = 0; i < cols.length; i++) {
@@ -305,7 +319,11 @@ public class DatabaseConnection {
 			    pst.setInt(colIndex + 1, Integer.parseInt(row[colIndex]));
 			    break;
 			case STRING:
-			    pst.setString(colIndex + 1, row[colIndex]);
+			    if ("".equals(row[colIndex]))
+				pst.setNull(colIndex + 1, Types.VARCHAR);
+
+			    else
+				pst.setString(colIndex + 1, row[colIndex]);
 			    break;
 			default:
 			    errorString = "Unexpected type found (this shouldn't happen)";
@@ -368,16 +386,23 @@ public class DatabaseConnection {
      * @param args
      *            parameters are ignored
      */
-    public static void main(String[] args) {
 
-	String url = "jdbc:mysql://localhost:3306/leep";
+    public static void main(String[] args) {
+	String url = "jdbc:h2:~/test";
 	String user = "javauser";
-	String password = "testpass";
+	String password = "";
 	DatabaseConnection conn = new DatabaseConnection(url, user, password);
 	conn.connect();
-	conn.loadCourseOfferings("/home/evan/Documents/regleep/realTest/courses201209.csv");
-	conn.loadFinalExams("/home/evan/Documents/regleep/realTest/finals201209.csv");
-	conn.loadStudentScheudle("/home/evan/Documents/regleep/realTest/students201209.csv");
+	System.out.println(conn.loadCourseOfferings("/home/evan/Documents/regleep/realTest/courses201209.csv"));
+	System.out.println(conn.getErrorString());
+	System.out.println(conn.loadFinalExams("/home/evan/Documents/regleep/realTest/finals201209.csv"));
+	System.out.println(conn.getErrorString());
+	System.out.println(conn.loadStudentScheudle("/home/evan/Documents/regleep/realTest/students201209.csv"));
+	System.out.println(conn.getErrorString());
+	System.out.println("finished there");
     }
 
+
+
 }
+

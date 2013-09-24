@@ -11,6 +11,10 @@ import java.util.Set;
 
 //tree set
 
+
+
+///Don't need to remove schedued from course vertex no longer in use because of pq -- also can remove all those hash tables
+
 public class Scheduler {
 
     public static final int MAXEXAMSPERDAY = 2, LARGE = 50;
@@ -21,6 +25,7 @@ public class Scheduler {
     PriorityQueue<CourseVertex> pq;
     HashMap<String, CourseVertex> cm;
     HashMap<String, Student> sm;
+    
     HashMap<String, Boolean> scheduled; //after removal from pq, checks if it has been scheduled already based on CRN   
     HashMap<String, String> crnToFac;
     HashMap<String, ArrayList<String>> facToCrn;
@@ -205,7 +210,7 @@ public class Scheduler {
 			checkb2b(course, edge, foundDay, foundBlock, b2b);
 		    course.updateAvailability();
 		    //this is not neccesary -- the course has never been removed
-		    //pq.add(course); //add back course to priority queue
+		    pq.add(course); //add back course to priority queue
 
 		}
 	    }
