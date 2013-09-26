@@ -1,4 +1,4 @@
-package databaseConnector;
+package zdatabaseConnector;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;

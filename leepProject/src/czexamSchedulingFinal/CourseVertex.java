@@ -1,4 +1,8 @@
-package consoleThings;
+package czexamSchedulingFinal;
+
+import java.util.Arrays;
+
+import consoleThings.Settings;
 
 /**
  * holds addition information for courses including crn, degree, weighted
@@ -8,19 +12,18 @@ package consoleThings;
  * 
  */
 
-public class FCourseVertex implements Comparable<FCourseVertex> {
+public class CourseVertex implements Comparable<CourseVertex> {
+
+    private int block; //block time for exam
+    private int day; //day of exam
     private String name; //typically CourseCRN
     private int wdegree; //weighted degree
     private int degree; //unweighted degree
-    private int block; //block time for exam
-    private int day; //day of exam
-    private int numDays, numBlocks;
     private int[][] degreeOfConflict;
     private int acceptableSlots;
     private int favorableSlots;
     private int enrollment;
 
-    private static int B2B1 = 2, B2B2 = 3, B2B3 = 4;
     public static int THREE_IN_DAY = -1;
 
     /**
@@ -30,28 +33,29 @@ public class FCourseVertex implements Comparable<FCourseVertex> {
      * @param g
      *            graph to create vertex from
      */
-    public FCourseVertex(String name, FStudentGraph<String, FStudentEdge> g, int enrollment) {
+    public CourseVertex(String name, int enrollment, int days, int blocks) {
 	this.name = name;
 	this.enrollment = enrollment;
-	wdegree = g.degreeOf(name);
-	degree = g.edgesOf(name).size();
-	block = -1;
 	day = -1;
+	block = -1;
 
-	//the following info is changed in getDayBlockInfo function, it depends on the number of days and blocks 
-	numDays = 0;
-	numBlocks = 0;
-	degreeOfConflict = null;
-	acceptableSlots = 0;
-	favorableSlots = 0;
-    }
-
-    public void getDayBlockInfo(int days, int blocks) {
-	numDays = days;
-	numBlocks = blocks;
-	degreeOfConflict = new int[days][blocks];
+	this.degreeOfConflict = new int[days][blocks];
+	//not sure if I need all of these
 	acceptableSlots = days * blocks;
 	favorableSlots = days * blocks;
+    }
+
+    public void clear() {
+	for (int[] d : degreeOfConflict)
+	    Arrays.fill(d, 0);
+	day = -1;
+	block = -1;
+	updateAvailability();
+    }
+
+    public void setDegrees(DependenciesGraph<String, DependentEdge> g) {
+	wdegree = g.degreeOf(name);
+	degree = g.edgesOf(name).size();
     }
 
     /**
@@ -63,9 +67,10 @@ public class FCourseVertex implements Comparable<FCourseVertex> {
      *            final day
      */
 
-    public void setTime(int block, int day) {
-	this.block = block;
+    public void setTime(int day, int block) {
 	this.day = day;
+	this.block = block;
+
     }
 
     /**
@@ -110,35 +115,33 @@ public class FCourseVertex implements Comparable<FCourseVertex> {
 	return wdegree;
     }
 
-    public int getAccSlots() {
-	return acceptableSlots;
-    }
-
     public int getEnrollment() {
 	return enrollment;
     }
 
-    public void setEnrollment(int enroll) {
-	enrollment = enroll;
+    public boolean isScheduled() {
+	return !(day == -1 && block == -1);
     }
 
     public static final int GREATER = 1, LESS = -1;
 
     @Override
-    public int compareTo(FCourseVertex o) {
+    public int compareTo(CourseVertex o) {
 	if (o == null)
 	    return GREATER;
+	if (acceptableSlots != o.acceptableSlots)
+	    return acceptableSlots - o.acceptableSlots; //then acceptable
 	if (favorableSlots != o.favorableSlots) //first check favorable slots
 	    return favorableSlots - o.favorableSlots;
-	else if (acceptableSlots != o.acceptableSlots)
-	    return acceptableSlots - o.acceptableSlots; //then acceptable
-	else if (degree != o.degree)
+	if (degree != o.degree)
 	    return -(degree - o.degree); //then degree
-	else if (wdegree != o.wdegree)
+	if (wdegree != o.wdegree)
 	    return -(wdegree - o.wdegree); //then weighted degree
-	else
-	    return LESS;
+
+	return LESS;
     }
+
+    //things I am unsure about
 
     public void removeSlot(int day, int block) {
 	degreeOfConflict[day][block] = THREE_IN_DAY;
@@ -146,7 +149,7 @@ public class FCourseVertex implements Comparable<FCourseVertex> {
 
     public void removeDay(int day) {
 	//set each block to -1 to denote the total unacceptability of the day
-	for (int block = 0; block < numBlocks; block++) {
+	for (int block = 0; block < degreeOfConflict.length; block++) {
 	    degreeOfConflict[day][block] = THREE_IN_DAY;
 	}
     }
@@ -159,31 +162,26 @@ public class FCourseVertex implements Comparable<FCourseVertex> {
 	return false;
     }
 
-    public boolean isScheduled() {
-	return !(day == -1 && block == -1);
-    }
-
     public int[][] degreeOfConflict() {
 	return degreeOfConflict;
     }
 
-    public void addB2BConflict(int day, int block) {
-	degreeOfConflict[day][block]++;
+    public void addBlockB2BConflict(int day, int block) {
+	//add unless the block is already impossible
+	if (degreeOfConflict[day][block] != THREE_IN_DAY)
+	    degreeOfConflict[day][block]++;
     }
 
+    //needs freaking to be generalized
     public void updateAvailability() {
 	acceptableSlots = 0;
 	favorableSlots = 0;
-	for (int day = 0; day < numDays; day++) {
-	    for (int block = 0; block < numBlocks; block++) {
-		if (degreeOfConflict[day][block] != -1) { //-1 means totally unacceptable - meaning three exams in a row for some student 
+	for (int day = 0; day < degreeOfConflict.length; day++) {
+	    for (int block = 0; block < degreeOfConflict[0].length; block++) {
+		if (degreeOfConflict[day][block] != THREE_IN_DAY) { //-1 means totally unacceptable - meaning three exams in a row for some student 
 		    acceptableSlots++;
-		    if (block == B2B1 || block == B2B2 || block == B2B3) {
-			if (degreeOfConflict[day][block] < 1) //as long as no more than 2 people have b2b exams, consider it favorable 
-			    favorableSlots++;
-
-		    } else
-			favorableSlots++; //if not a back to back slot, just increase the number of favorable slots
+		    if (degreeOfConflict[day][block] < Settings.MAX_BACK_TO_BACK) //as long as no more than 2 people have b2b exams, consider it favorable 
+			favorableSlots++;
 		}
 	    }
 	}

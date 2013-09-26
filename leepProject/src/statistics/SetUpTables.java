@@ -6,7 +6,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import databaseConnector.MySQLConnect;
+import zdatabaseConnector.MySQLConnect;
+
 
 public class SetUpTables {
 

@@ -1,4 +1,4 @@
-package consoleThings;
+package czexamSchedulingFinal;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -12,14 +12,14 @@ import org.jgrapht.graph.DefaultWeightedEdge;
  * @author evan
  * 
  */
-public class FStudentEdge extends DefaultWeightedEdge {
+public class DependentEdge extends DefaultWeightedEdge {
 
     private Set<String> students;
 
     /**
      * Constructor for StudentEdge
      */
-    public FStudentEdge() {
+    public DependentEdge() {
 	super();
 	students = new HashSet<String>();
 
@@ -41,6 +41,10 @@ public class FStudentEdge extends DefaultWeightedEdge {
      */
     protected void addStudent(String student) {
 	this.students.add(student);
+    }
+
+    protected boolean hasStudents() {
+	return !students.isEmpty();
     }
 
     /**

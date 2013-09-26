@@ -13,6 +13,8 @@ public class Settings {
     public final boolean largeConstraint;
     public final boolean facultyConstraint;
     public final boolean[][] backToBack;
+    public static final int MAX_BACK_TO_BACK = 1, LARGE = 50;
+    public static final int MAX_EXAM_PER_DAY = 2;
 
     public Settings(int days, int blocks, boolean largeConstraint, boolean facultyConstraint, boolean[][] backToBack) {
 	this.days = days;

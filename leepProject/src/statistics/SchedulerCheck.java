@@ -9,7 +9,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import databaseConnector.MySQLConnect;
+import zdatabaseConnector.MySQLConnect;
+
 import databaseForMainProject.DatabaseConnection;
 import examScheduling.CourseVertex;
 import examScheduling.GraphCreation;

@@ -12,7 +12,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import databaseConnector.MySQLConnect;
+import zdatabaseConnector.MySQLConnect;
+
 import databaseForMainProject.DatabaseConnection;
 import examScheduling.Student;
 

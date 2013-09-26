@@ -1,16 +1,16 @@
-package consoleThings;
+package czexamSchedulingFinal;
 
 import java.util.Arrays;
 
 /**
- * Student class holds additional information about students -- their student idF and
- * when they have exams
+ * Student class holds additional information about students -- their student
+ * idF and when they have exams
  * 
  * @author evan
  * 
  */
 
-public class FStudent {
+public class Student {
 
     private String name = null;
     private boolean[][] blocks;
@@ -24,9 +24,14 @@ public class FStudent {
      * @param blocksPerDay
      *            the number of blocks in each day
      */
-    public FStudent(String name, int days, int blocksPerDay) {
+    public Student(String name, int days, int blocksPerDay) {
 	this.name = name;
 	blocks = new boolean[days][blocksPerDay];
+    }
+
+    public void clear() {
+	for (boolean[] b : blocks)
+	    Arrays.fill(b, false);
     }
 
     /**

@@ -45,7 +45,7 @@ public class DatabaseConnection {
     //the finals sheets
     public static final String FinalTable = "FREUDfinals";
     public static final String[] ColsForFinalList = { "CourseCRN" };
-    public static final String[] TypesForFinalList = { "INT" };
+    public static final String[] TypesForFinalList = { "VARCHAR(5)" };
     public static final String primKeyForFinalList = "CourseCRN";
 
     private String url = null, user = null, password = null;

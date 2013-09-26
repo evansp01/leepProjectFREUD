@@ -3,15 +3,30 @@ package databaseForMainProject;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import consoleThings.CurrentProject;
+import czexamSchedulingFinal.CourseVertex;
 
 public class CreateFinalTable {
 
-    public static void maintainTables(CurrentProject cp) throws SQLException {
-	DatabaseConnection conn = cp.connection;
+    public static void updateExams(DatabaseConnection conn, HashMap<String, CourseVertex> map) {
+	String dbname = "FREUDstudswfins";
+	try {
+	    Statement st = conn.getStatement();
+	    for (CourseVertex cv : map.values()) {
+		String query = "UPDATE " + dbname + " SET FinalDay = '" + cv.day() + "', FinalBlock = '" + cv.block()
+			+ "' WHERE CHARINDEX ('" + cv.name() + "', CourseCRN) > 0";
+		st.executeUpdate(query);
+	    }
+	} catch (SQLException e) {
+	    e.printStackTrace();
+	}
+
+    }
+
+    public static void maintainTables(DatabaseConnection conn) {
 	try {
 	    String studentsTable = "FREUDstudents";
 	    String coursesTable = "FREUDcourses";
@@ -23,7 +38,7 @@ public class CreateFinalTable {
 	    String query1 = "CREATE TABLE " + tableToCreate + " AS SELECT " + thingsToSelect + " FROM " + studentsTable
 		    + " AS t1 LEFT JOIN " + coursesTable + " AS t2 ON t1.CourseCRN = t2.CourseCRN";
 	    String query2 = "ALTER TABLE " + tableToCreate + " ADD COLUMN finalDay INT NOT NULL DEFAULT '-1';";
-	    String query3 = "ALTER TABLE " + tableToCreate + " ADD COLUMN finalTime INT NOT NULL DEFAULT '-1';";
+	    String query3 = "ALTER TABLE " + tableToCreate + " ADD COLUMN finalBlock INT NOT NULL DEFAULT '-1';";
 	    String query4 = "DROP TABLE IF EXISTS " + studentsTable;
 	    st.executeUpdate(query0);
 	    st.executeUpdate(query1);
@@ -34,16 +49,13 @@ public class CreateFinalTable {
 	    crossListCodeThings(tableToCreate, conn);
 
 	} catch (SQLException e) {
-	    // TODO Auto-generated catch block
-	    e.printStackTrace();
 	}
-	conn.close();
 
     }
 
     public static int CROSSLISTCODE = 2, COURSECRN = 1, ACTUALENROLL = 3;
 
-    public static void crossListCodeThings(String dbname, DatabaseConnection conn) throws SQLException {
+    private static void crossListCodeThings(String dbname, DatabaseConnection conn) throws SQLException {
 	Statement findCrossList = conn.getStatement();
 	Statement update = conn.getStatement();
 	String thingsToSelect = "CourseCRN, CrossListCode, ActualEnroll";
