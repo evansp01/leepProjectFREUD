@@ -36,9 +36,9 @@ public class GraphCreation {
 	DatabaseConnection connect = project.connection;
 	Statement st = connect.getStatement();
 
-	String finalsTable = "FREUDfinals";
-	String studswfins = "FREUDstudswfins";
-	String tableName = "graphcreate";
+	String finalsTable = CurrentProject.finals;
+	String studswfins = CurrentProject.studentsWithInfo;
+	String tableName = "graphcreateTemp";
 
 	String query = "CREATE TEMP TABLE " + tableName + " AS (SELECT t1.* FROM " + studswfins + " AS t1, "
 		+ finalsTable + " AS t2 WHERE CHARINDEX (t2.CourseCRN, t1.CourseCRN) > 0)";

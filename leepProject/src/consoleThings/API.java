@@ -1,7 +1,11 @@
 package consoleThings;
 
 import java.io.File;
+import java.sql.SQLException;
 
+import czexamSchedulingFinal.GraphCreation;
+import czexamSchedulingFinal.Scheduler;
+import databaseForMainProject.CreateFinalTable;
 import databaseForMainProject.DatabaseConnection;
 
 public class API {
@@ -86,6 +90,8 @@ public class API {
 	    settings = (Settings) o;
 	else if (o instanceof String)
 	    return (String) o;
+	String urla = "jdbc:h2:" + pathToDocuments() + currentProject.name + File.pathSeparator
+		+ CurrentProject.database;
 	String url = "jdbc:h2:~/test";
 	String user = "javauser";
 	String password = "derp";
@@ -108,12 +114,16 @@ public class API {
 		connection.close();
 	}
 	currentProject = new CurrentProject(name, settings, connection);
-
-	//at this point we need to create the equivelant of StudsWFins
-	//I think we should do the crn unioning there instead of when we build the graph
-	//that would make potentially adding courses later much easier
-	//scheduleing should now be done
-
+	CreateFinalTable.maintainTables(currentProject.connection);
+	GraphCreation gc = null;
+	try {
+	    gc = new GraphCreation(currentProject);
+	} catch (SQLException e) {
+	    return "Error during graph creation: this shouldn't happen";
+	}
+	Scheduler scheduler = new Scheduler(gc, currentProject);
+	if (!scheduler.schedule())
+	    return "Could not find a valid schedule for this project";
 	return null;
 
     }
@@ -134,13 +144,14 @@ public class API {
      * close the current project
      */
     public static void closeProject() {
-	//something something something
+	if (currentProject.connection != null)
+	    currentProject.connection.close();
 	currentProject = null;
 
     }
 
     public static String pathToDocuments() {
-	return "/home/evan/Documents/regleep";
+	return "/home/evan/Documents/regleep/programTest/documents/";
     }
 
 }

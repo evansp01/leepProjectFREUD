@@ -15,6 +15,8 @@ import java.sql.Types;
 import java.util.HashSet;
 import java.util.Set;
 
+import consoleThings.CurrentProject;
+
 /**
  * 
  * @author Evan Palmer
@@ -151,7 +153,7 @@ public class DatabaseConnection {
      */
     public int loadStudentScheudle(String fileName) {
 	int result = 0;
-	result = generalLoader(fileName, StudentTable, ColsForStudentList, TypesForStudentList, DELIM,
+	result = generalLoader(fileName, CurrentProject.students, ColsForStudentList, TypesForStudentList, DELIM,
 		primKeyForStudentList);
 	return result;
     }
@@ -166,7 +168,8 @@ public class DatabaseConnection {
      */
     public int loadFinalExams(String fileName) {
 	int result = 0;
-	result = generalLoader(fileName, FinalTable, ColsForFinalList, TypesForFinalList, DELIM, primKeyForFinalList);
+	result = generalLoader(fileName, CurrentProject.finals, ColsForFinalList, TypesForFinalList, DELIM,
+		primKeyForFinalList);
 	return result;
     }
 
@@ -180,7 +183,7 @@ public class DatabaseConnection {
      */
     public int loadCourseOfferings(String fileName) {
 	int result = 0;
-	result = generalLoader(fileName, CourseTable, ColsForCourseList, TypesForCourseList, DELIM,
+	result = generalLoader(fileName, CurrentProject.courses, ColsForCourseList, TypesForCourseList, DELIM,
 		primKeyForCourseList);
 	return result;
     }
@@ -402,7 +405,4 @@ public class DatabaseConnection {
 	System.out.println("finished there");
     }
 
-
-
 }
-

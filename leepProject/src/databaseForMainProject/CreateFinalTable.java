@@ -7,12 +7,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import consoleThings.CurrentProject;
+
 import czexamSchedulingFinal.CourseVertex;
 
 public class CreateFinalTable {
 
     public static void updateExams(DatabaseConnection conn, HashMap<String, CourseVertex> map) {
-	String dbname = "FREUDstudswfins";
+	String dbname = CurrentProject.studentsWithInfo;
 	try {
 	    Statement st = conn.getStatement();
 	    for (CourseVertex cv : map.values()) {
@@ -27,12 +29,13 @@ public class CreateFinalTable {
     }
 
     public static void maintainTables(DatabaseConnection conn) {
+	String studentsTable = CurrentProject.students;
+	String coursesTable = CurrentProject.courses;
+
+	String tableToCreate = CurrentProject.studentsWithInfo;
 	try {
-	    String studentsTable = "FREUDstudents";
-	    String coursesTable = "FREUDcourses";
-	    String finalsTable = "FREUDfinals";
+
 	    Statement st = conn.getStatement();
-	    String tableToCreate = "FREUDstudswfins";
 	    String thingsToSelect = "t1.CourseCRN, t1.StudentIDNo, t2.FacFirstName, t2.FacLastName, t2.CrossListCode, t2.ActualEnroll";
 	    String query0 = "DROP TABLE IF EXISTS " + tableToCreate;
 	    String query1 = "CREATE TABLE " + tableToCreate + " AS SELECT " + thingsToSelect + " FROM " + studentsTable

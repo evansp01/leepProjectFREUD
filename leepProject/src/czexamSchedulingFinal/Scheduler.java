@@ -82,6 +82,8 @@ public class Scheduler {
 	int i = 0;
 	for (i = 0; i < 1000 && !result; i++) {
 	    result = trySchedule();
+	    if (!result)
+		clear();
 	}
 	System.out.println("" + i + " " + result);
 	return result;
@@ -91,6 +93,7 @@ public class Scheduler {
     private boolean trySchedule() {
 	if (!fresh)
 	    clear();
+	fresh = false;
 	updateAlreadyScheduled();
 	pq.addAll(cm.values());
 	while (!pq.isEmpty()) {
@@ -98,6 +101,7 @@ public class Scheduler {
 	    if (!current.isScheduled()) { //course has been scheduled 
 		if (!scheduleCourse(current)) {
 		    System.out.println("Scheduling failed");
+
 		    return false;
 		}
 	    }
@@ -145,7 +149,7 @@ public class Scheduler {
 	Iterator<String> studentItr = e.getStudents();
 	boolean dayRemoved = false;
 	while (studentItr.hasNext()) {
-	    
+
 	    Student student = sm.get(studentItr.next());
 	    student.occupy(day, block);
 	    if (!dayRemoved) { //if student in class has MAXEXAMS already on day i

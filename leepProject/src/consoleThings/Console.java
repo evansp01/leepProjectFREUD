@@ -108,11 +108,11 @@ public class Console {
     private static int projectOptions() {
 	prl("Your working project is: " + API.getWorkingProjectName());
 	prl("What would you like to do?");
-	prl("\t" + NEW_FINAL + " -- Schedule a final for an unscheduled course");
-	prl("\t" + MOVE_FINAL + " -- Move a currently scheduled final to a new time");
+	prl("\t" + NEW_FINAL + " -- Schedule finals for a group of unscheduled courses");
+	prl("\t" + MOVE_FINAL + " -- Move a currently scheduled final to a new time manually");
 	prl("\t" + DELETE_FINAL + " -- Unschedule a currently scheduled final");
-	prl("\t" + PRINT_CURRENT + " -- Print the current schedule");
-	prl("\t" + PRINT_STATS + " -- Print statistics about the current schedule");
+	prl("\t" + PRINT_CURRENT + " -- Display the current schedule");
+	prl("\t" + PRINT_STATS + " -- Display statistics about the current schedule");
 	prl("\t" + EXPORT + " -- Export the schedule to a file");
 	prl("\t" + EXIT_PROJECT + " -- Exit project and return to the main menu");
 	int option = NO_CHOICE;
