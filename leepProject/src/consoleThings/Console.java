@@ -72,26 +72,37 @@ public class Console {
 
     //PROJECT SPECIFIC METHODS
     private static void addNewFinal() {
+	String filename = "";
+	API.scheduleNewFinals(filename);
 
     }
 
     private static void printCurrent() {
+	API.printCurrent();
 
     }
 
     private static void printStatistics() {
+	API.printStatistics();
 
     }
 
     private static void exportToFile() {
-	// TODO Auto-generated method stub
+	String file = "";
+	API.exportToFile(file);
 
     }
 
     public static void deleteFinal() {
+	String file = "";
+	API.unscheduleFinals(file);
     }
 
     public static void moveFinal() {
+	String name = "";
+	API.unscheduleFinal(name);
+	String[] possibilities = API.listPossibleTimes(name);
+	API.scheduleFinalForTime(name);
     }
 
     private static void exitProject() {

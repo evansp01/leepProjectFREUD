@@ -9,7 +9,8 @@ public class CurrentProject {
 
     public static final String finals = "FREUDfinals", courses = "FREUDcourses", students = "FREUDstudents",
 	    studentsWithInfo = "FREUDStudentsWithInfo";
-    public static final String password = "", user = "user", database = "project";
+    public static final String password = "", user = "user", dbFile = "project.h2.db", urlStart = "jdbc:h2:",
+	    settingsFile = "project.settings";
 
     public CurrentProject(String name, Settings settings, DatabaseConnection connection) {
 	this.name = name;

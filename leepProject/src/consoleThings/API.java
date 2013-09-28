@@ -20,10 +20,34 @@ public class API {
      * @return
      */
     public static String projectExists(String project) {
-	File f = new File(pathToDocuments() + project);
+	File f = new File(pathToDocuments() + File.separator + project);
 	if (!f.exists())
 	    return "Could not find project named: " + project;
-	return "not implemented";
+	String notValid = project + " is not a valid project";
+	if (!f.isDirectory())
+	    return notValid;
+	File[] contents = f.listFiles();
+	boolean found = false;
+	for (int i = 0; i < contents.length; i++) {
+	    if ("project.h2.db".equals(contents[i].getName()))
+		found = true;
+	}
+	if (!found)
+	    return notValid;
+	String settingsFileName = f.getAbsolutePath() + File.separator + CurrentProject.settingsFile;
+	File settingsFile = new File(settingsFileName);
+	if (!settingsFile.exists())
+	    return notValid;
+
+	String url = CurrentProject.urlStart + f.getAbsolutePath() + CurrentProject.dbFile;
+	Object result = Settings.parseSettings(settingsFile);
+	if (result instanceof String)
+	    return project + "is not valid due to settings error: " + result;
+
+	DatabaseConnection connection = new DatabaseConnection(url, CurrentProject.user, CurrentProject.password);
+	CurrentProject cp = new CurrentProject(project, (Settings) result, connection);
+	currentProject = cp;
+	return null;
     }
 
     /**
@@ -90,9 +114,8 @@ public class API {
 	    settings = (Settings) o;
 	else if (o instanceof String)
 	    return (String) o;
-	String urla = "jdbc:h2:" + pathToDocuments() + currentProject.name + File.pathSeparator
-		+ CurrentProject.database;
-	String url = "jdbc:h2:~/test";
+	String urla = "jdbc:h2:" + pathToDocuments() + currentProject.name + File.pathSeparator + CurrentProject.dbFile;
+	String url = CurrentProject.urlStart + "~/test";
 	String user = "javauser";
 	String password = "derp";
 	DatabaseConnection connection = null;
@@ -150,8 +173,52 @@ public class API {
 
     }
 
+    public static final boolean TESTING = true;
+
     public static String pathToDocuments() {
-	return "/home/evan/Documents/regleep/programTest/documents/";
+	if (TESTING)
+	    return "/home/evan/documentsTesting";
+	return "not implemented";
+    }
+
+    public static void scheduleNewFinals(String filename) {
+	// TODO Auto-generated method stub
+
+    }
+
+    public static void printCurrent() {
+	// TODO Auto-generated method stub
+
+    }
+
+    public static void printStatistics() {
+	// TODO Auto-generated method stub
+
+    }
+
+    public static void exportToFile(String file) {
+	// TODO Auto-generated method stub
+
+    }
+
+    public static void unscheduleFinals(String file) {
+	// TODO Auto-generated method stub
+
+    }
+
+    public static void unscheduleFinal(String name) {
+	// TODO Auto-generated method stub
+
+    }
+
+    public static String[] listPossibleTimes(String name) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    public static void scheduleFinalForTime(String name) {
+	// TODO Auto-generated method stub
+
     }
 
 }
