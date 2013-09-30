@@ -3,6 +3,8 @@ package consoleThings;
 import java.io.File;
 import java.sql.SQLException;
 
+import cStatistics.SchedulerChecking;
+
 import czexamSchedulingFinal.GraphCreation;
 import czexamSchedulingFinal.Scheduler;
 import databaseForMainProject.CreateFinalTable;
@@ -187,13 +189,25 @@ public class API {
 
     }
 
-    public static void printCurrent() {
-	// TODO Auto-generated method stub
+    public static String printCurrent() {
+	Settings sett = currentProject.settings;
+	try {
+	    SchedulerChecking.printSchedule(currentProject.connection, CurrentProject.studentsWithInfo, sett);
+	} catch (SQLException e) {
+	    return "Error while printing schedule";
+	}
+	return null;
 
     }
 
-    public static void printStatistics() {
-	// TODO Auto-generated method stub
+    public static String printStatistics() {
+	Settings sett = currentProject.settings;
+	try {
+	    SchedulerChecking.stats(currentProject.connection, CurrentProject.studentsWithInfo, sett);
+	} catch (SQLException e) {
+	    return "Error while printing statistics";
+	}
+	return null;
 
     }
 

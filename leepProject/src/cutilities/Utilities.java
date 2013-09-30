@@ -4,7 +4,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Formatter;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -31,9 +30,9 @@ public class Utilities {
 		crns[list].addAll(Arrays.asList(crn));
 	    }
 	}
-	StringBuilder headers = new StringBuilder("|%-5s |");
+	StringBuilder headers = new StringBuilder("|%-3s |");
 	String[] values = new String[blocks + 1];
-	values[0] = "Day " + (day + 1);
+	values[0] = "Day";
 	for (int i = 0; i < blocks; i++) {
 	    headers.append("%9s|");
 	    values[i + 1] = "Block " + (i + 1);
@@ -41,6 +40,7 @@ public class Utilities {
 	headers.append("%n");
 	String rowTemplate = headers.toString();
 	boolean needMoreRows = true;
+	boolean first = true;
 	do {
 	    needMoreRows = false;
 	    System.out.format(rowTemplate, (Object[]) values);
@@ -51,6 +51,10 @@ public class Utilities {
 		} else {
 		    values[i] = "";
 		}
+	    }
+	    if (first) {
+		values[0] = "" + (day + 1);
+		first = false;
 	    }
 	} while (needMoreRows);
     }
@@ -84,6 +88,22 @@ public class Utilities {
 	}
 	System.out.println(j);
 
+    }
+
+
+
+    public static void prl() {
+	prl("");
+    }
+
+    public static void prl(Object s) {
+
+	System.out.println(s);
+    }
+
+    public static void pr(Object s) {
+
+	System.out.print(s);
     }
 
 }

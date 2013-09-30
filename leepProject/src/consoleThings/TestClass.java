@@ -40,8 +40,8 @@ public class TestClass {
 	Scheduler s = new Scheduler(gc, project);
 	s.schedule();
 	HashMap<String, CourseVertex> schedule = s.getCourseMap();
-	for (CourseVertex cv : schedule.values())
-	    System.out.println(cv.name() + "|" + cv.day() + "," + cv.block());
+	//	for (CourseVertex cv : schedule.values())
+	//	    System.out.println(cv.name() + "|" + cv.day() + "," + cv.block());
 	CreateFinalTable.updateExams(conn, schedule);
 	System.out.println(x++);
 	System.out.println(gc.getGraph().edgeSet().size());
@@ -49,7 +49,8 @@ public class TestClass {
 	System.out.println(gc.getAlreadyScheduled().size());
 	System.out.println(schedule.size());
 	try {
-	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo);
+	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
+	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
 	} catch (SQLException e) {
 	    e.printStackTrace();
 	}

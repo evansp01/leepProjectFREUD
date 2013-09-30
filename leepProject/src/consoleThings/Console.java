@@ -97,15 +97,17 @@ public class Console {
 
     }
 
-    //TODO: implement
     private static void printCurrent() {
-	API.printCurrent();
+	String result = API.printCurrent();
+	if (result != null)
+	    prl(result);
 
     }
 
-    //TODO: implement
     private static void printStatistics() {
-	API.printStatistics();
+	String result = API.printStatistics();
+	if (result != null)
+	    prl(result);
 
     }
 
@@ -157,8 +159,7 @@ public class Console {
 	    prl();
 	}
     }
-    
-    
+
     //needs implementation
     //TODO: implement this method
     public static void moveFinal() {
@@ -166,7 +167,7 @@ public class Console {
 	API.unscheduleFinal(name);
 	String[] possibilities = API.listPossibleTimes(name);
 	API.scheduleFinalForTime(name);
-	
+
     }
 
     private static void exitProject() {
