@@ -49,7 +49,7 @@ public class TestClass {
 	System.out.println(gc.getAlreadyScheduled().size());
 	System.out.println(schedule.size());
 	try {
-	    SchedulerChecking.check(conn, CurrentProject.studentsWithInfo, null);
+	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo);
 	} catch (SQLException e) {
 	    e.printStackTrace();
 	}

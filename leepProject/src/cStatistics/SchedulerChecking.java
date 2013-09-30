@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import statistics.Utilities;
+import cutilities.Utilities;
 
 import databaseForMainProject.DatabaseConnection;
 
@@ -22,8 +22,32 @@ public class SchedulerChecking {
 		ResultSet rs = st1.executeQuery(query);
 		System.out.println("Day " + (i + 1) + " Block " + (j + 1));
 		Utilities.print(rs);
-
 	    }
 	}
     }
+
+    public static void printSchedule(DatabaseConnection conn, String dbname) throws SQLException {
+	int day = 4, block = 4;
+	Statement sts[] = new Statement[block];
+	ResultSet[] dayRS = new ResultSet[block];
+	for (int i = 0; i < block; i++)
+	    sts[i] = conn.getStatement();
+
+	System.out.println("This is a printout of the schedule.\nThe numbers "
+		+ "in parenthesis signify that\nthe crns are cross listed (within blocks)\n");
+	for (int i = 0; i < day; i++) {
+	    for (int j = 0; j < block; j++) {
+		String query = "SELECT Distinct CourseCRN FROM " + dbname + " WHERE FinalDay = " + i
+			+ " AND FinalBlock = " + j;
+		dayRS[j] = sts[j].executeQuery(query);
+	    }
+	    Utilities.printDay(dayRS, i);
+	    System.out.println();
+
+	}
+	for (int i = 0; i < block; i++)
+	    sts[i].close();
+
+    }
+
 }

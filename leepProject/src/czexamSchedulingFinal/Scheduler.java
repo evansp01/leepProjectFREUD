@@ -24,7 +24,6 @@ public class Scheduler {
     private ArrayList<PreScheduledExam> as;
 
     //these things are not legit
-    private CurrentProject project;
 
     //this is legit
     private int days, blocks;
@@ -38,7 +37,6 @@ public class Scheduler {
 	cm = gc.getCourseMap();
 	pq = new PriorityQueue<>();
 	as = gc.getAlreadyScheduled();
-	this.project = project;
 	days = project.settings.days;
 	blocks = project.settings.blocks;
 	largeCourse = project.settings.largeConstraint;

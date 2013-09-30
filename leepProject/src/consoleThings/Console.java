@@ -1,5 +1,6 @@
 package consoleThings;
 
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 public class Console {
@@ -72,37 +73,100 @@ public class Console {
 
     //PROJECT SPECIFIC METHODS
     private static void addNewFinal() {
-	String filename = "";
-	API.scheduleNewFinals(filename);
+	String finals = NO_STRING;
+	while (true) {
+	    prl("Enter the path of the file containing the finals you wish to add");
+	    pr("Path: ");
+	    try {
+		finals = scan.next();
+	    } catch (Exception e) {
+		finals = NO_STRING;
+	    }
+
+	    String result = API.scheduleNewFinals(finals);
+	    if (result == null) {
+		prl("Finals successfully scheduled");
+		break;
+	    }
+
+	    else
+		prl("Error: " + result);
+	    prl("The finals you attempted to add could not be added. Returning to main menu ");
+	    prl();
+	}
 
     }
 
+    //TODO: implement
     private static void printCurrent() {
 	API.printCurrent();
 
     }
 
+    //TODO: implement
     private static void printStatistics() {
 	API.printStatistics();
 
     }
 
     private static void exportToFile() {
-	String file = "";
-	API.exportToFile(file);
+	String finals = NO_STRING;
+	while (true) {
+	    prl("Enter the path to which you would like to export");
+	    pr("Path: ");
+	    try {
+		finals = scan.next();
+	    } catch (Exception e) {
+		finals = NO_STRING;
+	    }
+
+	    String result = API.exportToFile(finals);
+	    if (result == null) {
+		prl("Export Successful");
+		break;
+	    }
+
+	    else
+		prl("Error: " + result);
+	    prl("File export failed: returning to main menu ");
+	    prl();
+	}
 
     }
 
     public static void deleteFinal() {
-	String file = "";
-	API.unscheduleFinals(file);
-    }
+	String finals = NO_STRING;
+	while (true) {
+	    prl("Enter the path of the file with the CRNs of the clases you would like to unschedule");
+	    pr("Path: ");
+	    try {
+		finals = scan.next();
+	    } catch (Exception e) {
+		finals = NO_STRING;
+	    }
 
+	    String result = API.unscheduleFinals(finals);
+	    if (result == null) {
+		prl("Finals successfully unscheduled");
+		break;
+	    }
+
+	    else
+		prl("Error: " + result);
+	    prl("Unscheduling Failed: Returning to main menu ");
+	    prl();
+	}
+    }
+    
+    
+    //needs implementation
+    //TODO: implement this method
     public static void moveFinal() {
 	String name = "";
 	API.unscheduleFinal(name);
 	String[] possibilities = API.listPossibleTimes(name);
 	API.scheduleFinalForTime(name);
+	
     }
 
     private static void exitProject() {

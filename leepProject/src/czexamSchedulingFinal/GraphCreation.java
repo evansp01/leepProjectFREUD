@@ -6,7 +6,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import statistics.Utilities;
 import consoleThings.CurrentProject;
 import databaseForMainProject.DatabaseConnection;
 
@@ -161,7 +160,6 @@ public class GraphCreation {
 	    nextFac = orderedIDs.getString(FIRST_FAC) + "$" + orderedIDs.getString(LAST_FAC);
 	    if (!nextFac.equals(currentFac)) {
 		if (crns != null && crns.size() > 1) {
-		    DependentEdge e = null;
 		    String s = null;
 		    String t = null;
 		    for (int i = 0; i < crns.size(); i++)

@@ -181,7 +181,8 @@ public class API {
 	return "not implemented";
     }
 
-    public static void scheduleNewFinals(String filename) {
+    public static String scheduleNewFinals(String filename) {
+	return "not implemented";
 	// TODO Auto-generated method stub
 
     }
@@ -196,17 +197,20 @@ public class API {
 
     }
 
-    public static void exportToFile(String file) {
+    public static String exportToFile(String file) {
+	return "not implemented";
 	// TODO Auto-generated method stub
 
     }
 
-    public static void unscheduleFinals(String file) {
+    public static String unscheduleFinals(String file) {
+	return "not implemented";
 	// TODO Auto-generated method stub
 
     }
 
-    public static void unscheduleFinal(String name) {
+    public static boolean unscheduleFinal(String name) {
+	return false;
 	// TODO Auto-generated method stub
 
     }
