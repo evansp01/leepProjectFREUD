@@ -3,8 +3,7 @@ package consoleThings;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import cStatistics.SchedulerChecking;
-
+import cutilities.Exporter;
 import czexamSchedulingFinal.CourseVertex;
 import czexamSchedulingFinal.GraphCreation;
 import czexamSchedulingFinal.Scheduler;
@@ -49,8 +48,10 @@ public class TestClass {
 	System.out.println(gc.getAlreadyScheduled().size());
 	System.out.println(schedule.size());
 	try {
-	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
-	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
+	    //	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
+	    //	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
+	    Exporter e = new Exporter();
+	    e.export(conn, CurrentProject.studentsWithInfo, sett);
 	} catch (SQLException e) {
 	    e.printStackTrace();
 	}

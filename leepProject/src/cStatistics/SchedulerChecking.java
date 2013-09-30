@@ -7,13 +7,13 @@ import java.util.HashMap;
 import java.util.LinkedList;
 
 import consoleThings.Settings;
+import cutilities.StatsPrinter;
 import cutilities.Utilities;
 import databaseForMainProject.DatabaseConnection;
 
 public class SchedulerChecking {
 
     //TODO add constants for the integers
-    //TODO 
 
     public static void printSchedule(DatabaseConnection conn, String dbname, Settings sett) throws SQLException {
 	int day = sett.days, block = sett.blocks;
@@ -87,8 +87,8 @@ public class SchedulerChecking {
 
 	//things that will eventually be printed
 
-	int[][] studentsWithNExamsPerDay = new int[days][blocks + 1]; //printed
-	int[][] studentsWithExamsInDayBlock = new int[days][blocks]; //printed
+	int[][] studentsWithNExamsPerDay = new int[days][blocks + 1];
+	int[][] studentsWithExamsInDayBlock = new int[days][blocks];
 	@SuppressWarnings("unchecked")
 	HashMap<Integer, Integer>[] NExamsInMDays = new HashMap[days - 1];
 	for (int i = 0; i < days - 1; i++)

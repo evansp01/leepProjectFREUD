@@ -31,7 +31,7 @@ public class DatabaseConnection {
     public static final String[] ColsForCourseList = { "CourseTerm", "PartofTerm", "CourseCRN", "Subject", "Sect",
 	    "MaxEnroll", "ActualEnroll", "CourseTitle", "CrossListCode", "FacFirstName", "FacLastName", "CrseNumb",
 	    "Days", "MeetBeginTime", "MeetEndTime", "CatalogDeptCode" };
-    public static final String[] TypesForCourseList = { "VARCHAR(50)", "VARCHAR(5)", "INT", "VARCHAR(10)",
+    public static final String[] TypesForCourseList = { "VARCHAR(50)", "VARCHAR(5)", "VARCHAR(5)", "VARCHAR(10)",
 	    "VARCHAR(5)", "INT", "INT", "VARCHAR(40)", "VARCHAR(5)", "VARCHAR(20)", "VARCHAR(20)", "INT",
 	    "VARCHAR(10)", "INT", "INT", "VARCHAR(10)" };
     public static final String primKeyForCourseList = "CourseCRN,Days,MeetBeginTime,MeetEndTime,FacFirstName,FacLastName";

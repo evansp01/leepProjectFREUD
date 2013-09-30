@@ -1,4 +1,4 @@
-package cStatistics;
+package cutilities;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -6,12 +6,13 @@ import java.util.HashMap;
 public class StatsPrinter {
     boolean toFile;
 
-    StatsPrinter() {
+    public StatsPrinter() {
 	toFile = false;
 
     }
 
-    StatsPrinter(String fileName) {
+    public StatsPrinter(String fileName) {
+	//TODO implement
 	toFile = true;
     }
 

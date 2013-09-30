@@ -4,7 +4,7 @@ import java.io.File;
 import java.sql.SQLException;
 
 import cStatistics.SchedulerChecking;
-
+import cutilities.Exporter;
 import czexamSchedulingFinal.GraphCreation;
 import czexamSchedulingFinal.Scheduler;
 import databaseForMainProject.CreateFinalTable;
@@ -14,6 +14,8 @@ public class API {
 
     private static CurrentProject currentProject = null;
 
+    public static final boolean TESTING = true;
+
     /**
      * determines if the project in question exists and attempts to open it null
      * indicates success, other is an error string
@@ -21,6 +23,7 @@ public class API {
      * @param project
      * @return
      */
+    //TODO test this dumb thing
     public static String projectExists(String project) {
 	File f = new File(pathToDocuments() + File.separator + project);
 	if (!f.exists())
@@ -116,10 +119,15 @@ public class API {
 	    settings = (Settings) o;
 	else if (o instanceof String)
 	    return (String) o;
-	String urla = "jdbc:h2:" + pathToDocuments() + currentProject.name + File.pathSeparator + CurrentProject.dbFile;
-	String url = CurrentProject.urlStart + "~/test";
-	String user = "javauser";
-	String password = "derp";
+	String url;
+	//TODO test to make sure the relative path stuff works
+	if (TESTING)
+	    url = CurrentProject.urlStart + "~/test";
+	else
+	    url = "jdbc:h2:" + pathToDocuments() + currentProject.name + File.pathSeparator + CurrentProject.dbFile;
+
+	String user = CurrentProject.user;
+	String password = CurrentProject.password;
 	DatabaseConnection connection = null;
 	try {
 	    connection = new DatabaseConnection(url, user, password);
@@ -175,14 +183,7 @@ public class API {
 
     }
 
-    public static final boolean TESTING = true;
-
-    public static String pathToDocuments() {
-	if (TESTING)
-	    return "/home/evan/documentsTesting";
-	return "not implemented";
-    }
-
+    //add entries to database then run scheduler
     public static String scheduleNewFinals(String filename) {
 	return "not implemented";
 	// TODO Auto-generated method stub
@@ -212,31 +213,49 @@ public class API {
     }
 
     public static String exportToFile(String file) {
-	return "not implemented";
-	// TODO Auto-generated method stub
+	//TODO make so this prints to a file
+	Exporter ex = new Exporter();
+	try {
+	    ex.export(currentProject.connection, CurrentProject.studentsWithInfo, currentProject.settings);
+	} catch (SQLException e) {
+	    return "error with export";
+	}
+	return null;
 
     }
 
+    //a bunch of calls to unscheduleFinal and some parsing
     public static String unscheduleFinals(String file) {
 	return "not implemented";
 	// TODO Auto-generated method stub
 
     }
 
+    //just an sql update query, with the possibility of another query
     public static boolean unscheduleFinal(String name) {
 	return false;
 	// TODO Auto-generated method stub
 
     }
 
+    //create the graph and list possible times
     public static String[] listPossibleTimes(String name) {
+	//	Scheduler s = new Scheduler(null, null);
+	//	s.findAvailableSlots(null);
 	// TODO Auto-generated method stub
 	return null;
     }
 
+    //just an sql update query
     public static void scheduleFinalForTime(String name) {
 	// TODO Auto-generated method stub
 
+    }
+
+    public static String pathToDocuments() {
+	if (TESTING)
+	    return "/home/evan/documentsTesting";
+	return "not implemented";
     }
 
 }
