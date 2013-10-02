@@ -1,8 +1,10 @@
 package consoleThings;
 
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 
+import cStatistics.SchedulerChecking;
 import cutilities.Exporter;
 import czexamSchedulingFinal.CourseVertex;
 import czexamSchedulingFinal.GraphCreation;
@@ -12,10 +14,10 @@ import databaseForMainProject.DatabaseConnection;
 
 public class TestClass {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
 	int x = 0;
 	String url = "jdbc:h2:~/test";
-	String user = "javauser";
+	String user = "user";
 	String password = "";
 	DatabaseConnection conn = new DatabaseConnection(url, user, password);
 	conn.connect();
@@ -48,11 +50,11 @@ public class TestClass {
 	System.out.println(gc.getAlreadyScheduled().size());
 	System.out.println(schedule.size());
 	try {
-	    //	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
-	    //	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
+	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
+	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
 	    Exporter e = new Exporter();
 	    e.export(conn, CurrentProject.studentsWithInfo, sett);
-	} catch (SQLException e) {
+	} catch (SQLException | IOException e) {
 	    e.printStackTrace();
 	}
 

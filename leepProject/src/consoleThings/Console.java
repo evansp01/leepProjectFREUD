@@ -1,6 +1,5 @@
 package consoleThings;
 
-import java.io.PrintWriter;
 import java.util.Scanner;
 
 public class Console {
@@ -72,6 +71,9 @@ public class Console {
     }
 
     //PROJECT SPECIFIC METHODS
+
+    //    halt after output on display and stats
+    //TODO
     private static void addNewFinal() {
 	String finals = NO_STRING;
 	while (true) {
@@ -166,7 +168,7 @@ public class Console {
 	String name = "";
 	API.unscheduleFinal(name);
 	String[] possibilities = API.listPossibleTimes(name);
-	API.scheduleFinalForTime(name);
+	String result = API.scheduleFinalForTime(name, -1, -1);
 
     }
 

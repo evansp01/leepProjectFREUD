@@ -150,7 +150,7 @@ public class DatabaseConnection {
     public int loadStudentScheudle(String fileName) {
 	int result = 0;
 	result = generalLoader(fileName, CurrentProject.students, ColsForStudentList, TypesForStudentList, DELIM,
-		primKeyForStudentList);
+		primKeyForStudentList, true);
 	return result;
     }
 
@@ -165,8 +165,16 @@ public class DatabaseConnection {
     public int loadFinalExams(String fileName) {
 	int result = 0;
 	result = generalLoader(fileName, CurrentProject.finals, ColsForFinalList, TypesForFinalList, DELIM,
-		primKeyForFinalList);
+		primKeyForFinalList, false);
 	return result;
+    }
+
+    public int loadFinalTable(String fileName, String tableName) {
+	int result = 0;
+	result = generalLoader(fileName, tableName, ColsForFinalList, TypesForFinalList, DELIM, primKeyForFinalList,
+		true);
+	return result;
+
     }
 
     /**
@@ -180,7 +188,7 @@ public class DatabaseConnection {
     public int loadCourseOfferings(String fileName) {
 	int result = 0;
 	result = generalLoader(fileName, CurrentProject.courses, ColsForCourseList, TypesForCourseList, DELIM,
-		primKeyForCourseList);
+		primKeyForCourseList, false);
 	return result;
     }
 
@@ -196,13 +204,16 @@ public class DatabaseConnection {
      *            the name of the table
      * @return returns a boolean describing success
      */
-    private boolean createTable(String[] cols, String[] types, String primKey, String name) {
+    private boolean createTable(String[] cols, String[] types, String primKey, String name, boolean temp) {
 	if (types.length != cols.length) {
 	    return false;
 	}
 	//build table creation string
 	StringBuilder tableCreator = new StringBuilder();
-	tableCreator.append("CREATE TABLE " + name + " (");
+	if (temp)
+	    tableCreator.append("CREATE TEMP TABLE " + name + " (");
+	else
+	    tableCreator.append("CREATE TABLE " + name + " (");
 	for (int i = 0; i < cols.length; i++) {
 	    tableCreator.append(cols[i] + " " + types[i]);
 	    if (i != cols.length - 1)
@@ -247,7 +258,8 @@ public class DatabaseConnection {
      *            the primary key for the table
      * @return returns an integer describing success or failure
      */
-    private int generalLoader(String fn, String name, String[] cols, String[] types, String delim, String pk) {
+    private int generalLoader(String fn, String name, String[] cols, String[] types, String delim, String pk,
+	    boolean temp) {
 	BufferedReader br = null;
 	PreparedStatement pst = null;
 	String line = null;
@@ -277,7 +289,7 @@ public class DatabaseConnection {
 	    }
 
 	    //ensure the table is successfully created
-	    if (!createTable(cols, types, pk, name)) {
+	    if (!createTable(cols, types, pk, name, temp)) {
 		errorString = "Could not create table";
 		return COULD_NOT_CREATE_TABLE;
 	    }

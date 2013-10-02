@@ -1,7 +1,10 @@
 package consoleThings;
 
 import java.io.File;
+import java.io.IOException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import cStatistics.SchedulerChecking;
 import cutilities.Exporter;
@@ -12,9 +15,15 @@ import databaseForMainProject.DatabaseConnection;
 
 public class API {
 
+    //	TODO all of this
+
+    //    switch day with most large exams to first day
+
     private static CurrentProject currentProject = null;
 
     public static final boolean TESTING = true;
+
+    //TODO make it so this works when false
 
     /**
      * determines if the project in question exists and attempts to open it null
@@ -121,9 +130,10 @@ public class API {
 	    return (String) o;
 	String url;
 	//TODO test to make sure the relative path stuff works
-	if (TESTING)
+	if (TESTING) {
 	    url = CurrentProject.urlStart + "~/test";
-	else
+	    System.out.println(url);
+	} else
 	    url = "jdbc:h2:" + pathToDocuments() + currentProject.name + File.pathSeparator + CurrentProject.dbFile;
 
 	String user = CurrentProject.user;
@@ -143,8 +153,8 @@ public class API {
 	    System.out.println(e.getMessage());
 	    return "error connecting to database";
 	} finally {
-	    if (connection != null)
-		connection.close();
+	    //	    if (connection != null)
+	    //		connection.close();
 	}
 	currentProject = new CurrentProject(name, settings, connection);
 	CreateFinalTable.maintainTables(currentProject.connection);
@@ -183,10 +193,53 @@ public class API {
 
     }
 
+    //TODO in general these methods do not belong where they are currently
+
     //add entries to database then run scheduler
-    public static String scheduleNewFinals(String filename) {
-	return "not implemented";
-	// TODO Auto-generated method stub
+    //TODO test
+
+    public static String scheduleNewFinals(String file) {
+	file = "/home/evan/file.txt";
+	String tempTable = "FREUDtoAdd";
+	StringBuilder sb = new StringBuilder();
+	currentProject.connection.loadFinalTable(file, tempTable);
+
+	String query1 = "SELECT t1.CourseCRN FROM " + tempTable + ", " + CurrentProject.finals
+		+ " AS t2 WHERE t1.CourseCRN = t2.CourseCRN";
+	String query2 = "SELECT t1.CourseCRN FROM " + tempTable + "AS t1 WHERE NOT EXISTS SELECT CourseCRN FROM "
+		+ CurrentProject.courses + "AS t2 WHERE t1.CourseCRN = t2.CourseCRN";
+	String query3 = "MERGE INTO " + CurrentProject.finals + " SELECT t2.CourseCRN FROM " + tempTable + " AS t1, "
+		+ CurrentProject.courses + " AS t2 WHERE t1.CourseCRN=t2.CourseCRN";
+	Statement st = null;
+	try {
+	    st = currentProject.connection.getStatement();
+	    ResultSet rs1 = st.executeQuery(query1);
+	    while (rs1.next())
+		sb.append(rs1.getString(1) + " was already scheduled\n");
+	    ResultSet rs2 = st.executeQuery(query2);
+	    while (rs2.next())
+		sb.append(rs2.getString(1) + " was not added because it is not in the master course list\n");
+	    st.executeUpdate(query3);
+	    st.executeUpdate("DROP TABLE " + tempTable);
+	} catch (SQLException e) {
+	    return "error accessing database to add finals";
+	} finally {
+	    if (st != null)
+		try {
+		    st.close();
+		} catch (SQLException e) {
+		}
+	}
+	GraphCreation gc = null;
+	try {
+	    gc = new GraphCreation(currentProject);
+	} catch (SQLException e) {
+	    return "Error during graph creation: this shouldn't happen";
+	}
+	Scheduler scheduler = new Scheduler(gc, currentProject);
+	if (!scheduler.schedule())
+	    return "Could not find a valid schedule for this project";
+	return null;
 
     }
 
@@ -213,12 +266,22 @@ public class API {
     }
 
     public static String exportToFile(String file) {
-	//TODO make so this prints to a file
-	Exporter ex = new Exporter();
+	Exporter ex;
 	try {
+	    if (file == null)
+		ex = new Exporter();
+	    else {
+		File f = new File(file);
+		if (f.exists())
+		    return "file could not be opened";
+		ex = new Exporter(f);
+	    }
+
 	    ex.export(currentProject.connection, CurrentProject.studentsWithInfo, currentProject.settings);
 	} catch (SQLException e) {
 	    return "error with export";
+	} catch (IOException e) {
+	    return "error while exporting to file";
 	}
 	return null;
 
@@ -226,29 +289,77 @@ public class API {
 
     //a bunch of calls to unscheduleFinal and some parsing
     public static String unscheduleFinals(String file) {
-	return "not implemented";
-	// TODO Auto-generated method stub
+	StringBuilder sb = new StringBuilder();
+	if (TESTING)
+	    file = "/home/evan/file.txt";
+	String tempTable = "FREUDtoUnschedule";
+	currentProject.connection.loadFinalTable(file, tempTable);
+	Statement st = null;
+	try {
+	    st = currentProject.connection.getStatement();
+	    ResultSet rs = st.executeQuery("SELECT CourseCRN FROM " + tempTable);
+	    while (rs.next()) {
+		String crn = rs.getString(1);
+		if (!unscheduleFinal(crn))
+		    sb.append("Unscheduling failed for crn " + crn);
+	    }
+	    st.executeUpdate("DROP TABLE " + tempTable);
+	} catch (SQLException e) {
+	    return "error while accessing database to unschedule courses";
+	} finally {
+	    if (st != null)
+		try {
+		    st.close();
+		} catch (SQLException e) {
+		}
+	}
+	String failed = sb.toString();
+	if (failed.length() != 0)
+	    return failed;
+	else
+	    return null;
 
     }
 
     //just an sql update query, with the possibility of another query
     public static boolean unscheduleFinal(String name) {
-	return false;
-	// TODO Auto-generated method stub
+	String dbname = CurrentProject.studentsWithInfo;
+	String queryFin = "UPDATE " + dbname + " SET FinalDay = '-1', "
+		+ "FinalBlock = '-1' WHERE CHARINDEX(CourseCRN,'" + name + "')>0";
+	try {
+	    currentProject.connection.getStatement().executeUpdate(queryFin);
+	} catch (SQLException e) {
+	    return false;
+	}
+	return true;
 
     }
 
     //create the graph and list possible times
+    //TODO implement
     public static String[] listPossibleTimes(String name) {
+	//check if in the list of finals
+	//if not in, add to the list of finals
+	//make the graph and scheduler
+	//get the blocks that this course is available
+	//remove this course from the list of finals if it wasn't there previously
 	//	Scheduler s = new Scheduler(null, null);
 	//	s.findAvailableSlots(null);
-	// TODO Auto-generated method stub
+
 	return null;
     }
 
     //just an sql update query
-    public static void scheduleFinalForTime(String name) {
-	// TODO Auto-generated method stub
+    public static String scheduleFinalForTime(String name, int day, int time) {
+	String dbname = CurrentProject.studentsWithInfo;
+	String queryFin = "UPDATE " + dbname + " SET FinalDay = '" + day + "', " + "FinalBlock = '" + time
+		+ "' WHERE CHARINDEX(CourseCRN,'" + name + "')>0";
+	try {
+	    currentProject.connection.getStatement().executeUpdate(queryFin);
+	} catch (SQLException e) {
+	    return "error while attempting to schedule final";
+	}
+	return null;
 
     }
 

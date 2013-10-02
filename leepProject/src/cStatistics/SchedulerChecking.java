@@ -14,6 +14,7 @@ import databaseForMainProject.DatabaseConnection;
 public class SchedulerChecking {
 
     //TODO add constants for the integers
+    //    number cross lists differently in the printout
 
     public static void printSchedule(DatabaseConnection conn, String dbname, Settings sett) throws SQLException {
 	int day = sett.days, block = sett.blocks;
@@ -205,7 +206,6 @@ public class SchedulerChecking {
 	rs1.close();
 	//end of large while loop
 	//printing a large number of things
-	//TODO update section headers
 	sp.printSectionHeader("Number of students with exams in each day and block");
 	sp.printDayBlock2DIntArray(studentsWithExamsInDayBlock, days, blocks);
 	sp.printSectionHeader("Students with N exams in a day");
