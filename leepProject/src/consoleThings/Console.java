@@ -3,6 +3,7 @@ package consoleThings;
 import java.util.Scanner;
 
 public class Console {
+    private static String path;
     private static Scanner scan;
 
     public static final int NO_CHOICE = 0;
@@ -10,6 +11,12 @@ public class Console {
     public static final boolean SUCCESS = true, GO_BACK = false;
 
     public static void main(String[] args) {
+	if (args.length < 1) {
+	    prl("Console must be run with the path to the documents folder as an argument");
+	    return;
+	}
+	path = args[0];
+	System.out.println(args[0]);
 	scan = new Scanner(System.in);
 	//either open or create a project, both should have the same result
 	while (true) {
@@ -76,25 +83,20 @@ public class Console {
     //TODO
     private static void addNewFinal() {
 	String finals = NO_STRING;
-	while (true) {
-	    prl("Enter the path of the file containing the finals you wish to add");
-	    pr("Path: ");
-	    try {
-		finals = scan.next();
-	    } catch (Exception e) {
-		finals = NO_STRING;
-	    }
 
-	    String result = API.scheduleNewFinals(finals);
-	    if (result == null) {
-		prl("Finals successfully scheduled");
-		break;
-	    }
+	prl("Enter the path of the file containing the finals you wish to add");
+	pr("Path: ");
+	try {
+	    finals = scan.next();
+	} catch (Exception e) {
+	    finals = NO_STRING;
+	}
 
-	    else
-		prl("Error: " + result);
-	    prl("The finals you attempted to add could not be added. Returning to main menu ");
-	    prl();
+	String result = API.scheduleNewFinals(finals);
+	if (result == null) {
+	    prl("Finals successfully scheduled");
+	} else {
+	    prl("Error: " + result);
 	}
 
     }
@@ -119,7 +121,7 @@ public class Console {
 	    prl("Enter the path to which you would like to export");
 	    pr("Path: ");
 	    try {
-		finals = scan.next();
+		finals = scan.nextLine();
 	    } catch (Exception e) {
 		finals = NO_STRING;
 	    }
@@ -144,7 +146,7 @@ public class Console {
 	    prl("Enter the path of the file with the CRNs of the clases you would like to unschedule");
 	    pr("Path: ");
 	    try {
-		finals = scan.next();
+		finals = scan.nextLine();
 	    } catch (Exception e) {
 		finals = NO_STRING;
 	    }
@@ -167,7 +169,7 @@ public class Console {
     public static void moveFinal() {
 	String name = "";
 	API.unscheduleFinal(name);
-	String[] possibilities = API.listPossibleTimes(name);
+	Object[] possibilities = API.listPossibleTimes(name);
 	String result = API.scheduleFinalForTime(name, -1, -1);
 
     }
@@ -197,7 +199,7 @@ public class Console {
 	while (true) {
 	    pr("Enter choice here: ");
 	    try {
-		option = Integer.parseInt(scan.next());
+		option = Integer.parseInt(scan.nextLine());
 	    } catch (Exception e) {
 		option = NO_CHOICE;
 	    }
@@ -215,12 +217,12 @@ public class Console {
 	    prl("Enter the path of the project you wish to open");
 	    pr("Path: ");
 	    try {
-		project = scan.next();
+		project = scan.nextLine();
 	    } catch (Exception e) {
 		project = NO_STRING;
 	    }
 
-	    String result = API.projectExists(project);
+	    String result = API.projectExists(project, path);
 	    if (result == null) {
 		prl("Project successfully opened");
 		break;
@@ -242,14 +244,16 @@ public class Console {
 	    prl("Enter the name/path for your new project");
 	    pr("Name: ");
 	    try {
-		name = scan.next();
+		name = scan.nextLine();
 	    } catch (Exception e) {
 		name = null;
 		continue;
 	    }
-	    if (API.isValidName(name))
+	    String result = API.isValidName(name, path);
+	    if (result == null)
 		break;
 	    prl("Sorry, " + name + " is not a valid project name");
+	    prl(result);
 	    prl();
 	    if (!doYouWantToContinue())
 		return GO_BACK;
@@ -259,14 +263,14 @@ public class Console {
 	    prl("Enter the path of the source folder to create the project from");
 	    pr("Path: ");
 	    try {
-		project = scan.next();
+		project = scan.nextLine();
 	    } catch (Exception e) {
 		project = NO_STRING;
 		continue;
 	    }
 
 	    prl("Attempting to create project " + name + " from folder " + project + "");
-	    String result = API.createProjectFromFolder(name, project);
+	    String result = API.createProjectFromFolder(name, project, path);
 	    if (result == null) {
 		prl("Project creation successful");
 		break;
@@ -290,7 +294,7 @@ public class Console {
 	while (true) {
 	    pr("Enter choice here: ");
 	    try {
-		option = Integer.parseInt(scan.next());
+		option = Integer.parseInt(scan.nextLine());
 	    } catch (Exception e) {
 		option = NO_CHOICE;
 	    }
@@ -313,7 +317,7 @@ public class Console {
 	while (true) {
 	    pr("Enter choice here: ");
 	    try {
-		option = Integer.parseInt(scan.next());
+		option = Integer.parseInt(scan.nextLine());
 	    } catch (Exception e) {
 		option = NO_CHOICE;
 	    }
@@ -323,6 +327,10 @@ public class Console {
 	}
 	return option;
 
+    }
+
+    public String path() {
+	return path;
     }
 
     //METHODS TO MAKE PRINTING EASIER

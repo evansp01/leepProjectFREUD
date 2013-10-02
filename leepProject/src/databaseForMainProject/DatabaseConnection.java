@@ -99,6 +99,7 @@ public class DatabaseConnection {
      */
     public void close() {
 	try {
+	    connect.commit();
 	    connect.close();
 	} catch (Exception e) {
 	}

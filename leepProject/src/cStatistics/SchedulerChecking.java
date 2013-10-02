@@ -205,7 +205,7 @@ public class SchedulerChecking {
 	}
 	rs1.close();
 	//end of large while loop
-	//printing a large number of things
+	//printing a large number of things	
 	sp.printSectionHeader("Number of students with exams in each day and block");
 	sp.printDayBlock2DIntArray(studentsWithExamsInDayBlock, days, blocks);
 	sp.printSectionHeader("Students with N exams in a day");
