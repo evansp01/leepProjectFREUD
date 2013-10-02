@@ -14,7 +14,7 @@ import java.util.Queue;
 
 public class Utilities {
 
-    public static void printDay(ResultSet[] dayRS, int day) throws SQLException {
+    public static int printDay(ResultSet[] dayRS, int day, int crossList) throws SQLException {
 	int blocks = dayRS.length;
 	@SuppressWarnings("unchecked")
 	Queue<String>[] crns = new LinkedList[blocks];
@@ -23,7 +23,6 @@ public class Utilities {
 	//change cross listed crns to have parenthesis 
 	//so that they can't mess up column formatting
 	for (int list = 0; list < blocks; list++) {
-	    int crossList = 1;
 	    crns[list] = new LinkedList<String>();
 	    while (dayRS[list].next()) {
 		String[] crn = dayRS[list].getString(1).split("-", -1);
@@ -62,6 +61,7 @@ public class Utilities {
 		first = false;
 	    }
 	} while (needMoreRows);
+	return crossList;
     }
 
     public static void print(ResultSet rs) throws SQLException {
@@ -94,31 +94,28 @@ public class Utilities {
 	System.out.println(j);
 
     }
-    
+
     public static void copyFile(File sourceFile, File destFile) throws IOException {
-	    if(!destFile.exists()) {
-	        destFile.createNewFile();
-	    }
-
-	    FileChannel source = null;
-	    FileChannel destination = null;
-
-	    try {
-	        source = new FileInputStream(sourceFile).getChannel();
-	        destination = new FileOutputStream(destFile).getChannel();
-	        destination.transferFrom(source, 0, source.size());
-	    }
-	    finally {
-	        if(source != null) {
-	            source.close();
-	        }
-	        if(destination != null) {
-	            destination.close();
-	        }
-	    }
+	if (!destFile.exists()) {
+	    destFile.createNewFile();
 	}
 
+	FileChannel source = null;
+	FileChannel destination = null;
 
+	try {
+	    source = new FileInputStream(sourceFile).getChannel();
+	    destination = new FileOutputStream(destFile).getChannel();
+	    destination.transferFrom(source, 0, source.size());
+	} finally {
+	    if (source != null) {
+		source.close();
+	    }
+	    if (destination != null) {
+		destination.close();
+	    }
+	}
+    }
 
     public static void prl() {
 	prl("");

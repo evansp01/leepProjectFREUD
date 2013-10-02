@@ -117,23 +117,21 @@ public class Console {
 
     private static void exportToFile() {
 	String finals = NO_STRING;
-	while (true) {
-	    prl("Enter the path to which you would like to export");
-	    pr("Path: ");
-	    try {
-		finals = scan.nextLine();
-	    } catch (Exception e) {
-		finals = NO_STRING;
-	    }
 
-	    String result = API.exportToFile(finals);
-	    if (result == null) {
-		prl("Export Successful");
-		break;
-	    }
+	prl("Enter the path to which you would like to export");
+	pr("Path: ");
+	try {
+	    finals = scan.nextLine();
+	} catch (Exception e) {
+	    finals = NO_STRING;
+	}
 
-	    else
-		prl("Error: " + result);
+	String result = API.exportToFile(finals);
+	if (result == null) {
+	    prl("Export Successful");
+
+	} else {
+	    prl("Error: " + result);
 	    prl("File export failed: returning to main menu ");
 	    prl();
 	}
@@ -142,26 +140,23 @@ public class Console {
 
     public static void deleteFinal() {
 	String finals = NO_STRING;
-	while (true) {
-	    prl("Enter the path of the file with the CRNs of the clases you would like to unschedule");
-	    pr("Path: ");
-	    try {
-		finals = scan.nextLine();
-	    } catch (Exception e) {
-		finals = NO_STRING;
-	    }
+	prl("Enter the path of the file with the CRNs of the clases you would like to unschedule");
+	pr("Path: ");
+	try {
+	    finals = scan.nextLine();
+	} catch (Exception e) {
+	    finals = NO_STRING;
+	}
 
-	    String result = API.unscheduleFinals(finals);
-	    if (result == null) {
-		prl("Finals successfully unscheduled");
-		break;
-	    }
-
-	    else
-		prl("Error: " + result);
+	String result = API.unscheduleFinals(finals);
+	if (result == null) {
+	    prl("Finals successfully unscheduled");
+	} else {
+	    prl("Error: " + result);
 	    prl("Unscheduling Failed: Returning to main menu ");
 	    prl();
 	}
+
     }
 
     //needs implementation

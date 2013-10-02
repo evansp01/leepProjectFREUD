@@ -13,25 +13,34 @@ import databaseForMainProject.DatabaseConnection;
 
 public class SchedulerChecking {
 
-    //TODO add constants for the integers
-    //    number cross lists differently in the printout
-
-    public static void printSchedule(DatabaseConnection conn, String dbname, Settings sett) throws SQLException {
+    /**
+     * 
+     * @param conn
+     *            database connection
+     * @param tableName
+     *            name of table
+     * @param sett
+     *            settings file
+     * @throws SQLException
+     */
+    public static void printSchedule(DatabaseConnection conn, String tableName, Settings sett) throws SQLException {
 	int day = sett.days, block = sett.blocks;
 	Statement sts[] = new Statement[block];
 	ResultSet[] dayRS = new ResultSet[block];
 	for (int i = 0; i < block; i++)
 	    sts[i] = conn.getStatement();
 
+	int crossList = 1;
+
 	System.out.println("This is a printout of the schedule.\nThe numbers "
 		+ "in parenthesis signify that\nthe crns are cross listed (within blocks)\n");
 	for (int i = 0; i < day; i++) {
 	    for (int j = 0; j < block; j++) {
-		String query = "SELECT Distinct CourseCRN FROM " + dbname + " WHERE FinalDay = " + i
+		String query = "SELECT Distinct CourseCRN FROM " + tableName + " WHERE FinalDay = " + i
 			+ " AND FinalBlock = " + j;
 		dayRS[j] = sts[j].executeQuery(query);
 	    }
-	    Utilities.printDay(dayRS, i);
+	    crossList = Utilities.printDay(dayRS, i, crossList);
 	    System.out.println();
 
 	}

@@ -258,6 +258,11 @@ public class API {
 
     }
 
+    /**
+     * Prints the current schedule
+     * 
+     * @return null on no error, error string on success
+     */
     public static String printCurrent() {
 	Settings sett = currentProject.settings;
 	try {
@@ -269,6 +274,10 @@ public class API {
 
     }
 
+    /**
+     * 
+     * @return
+     */
     public static String printStatistics() {
 	Settings sett = currentProject.settings;
 	try {
@@ -280,6 +289,11 @@ public class API {
 
     }
 
+    /**
+     * 
+     * @param file
+     * @return
+     */
     public static String exportToFile(String file) {
 	Exporter ex;
 	try {
