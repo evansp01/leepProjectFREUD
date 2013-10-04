@@ -179,7 +179,7 @@ public class Console {
 	try {
 	    prl("Enter the CRN of the course you would like to move");
 	    String name = scan.nextLine();
-	    if (!API.crnInDB(name) && API.crnInFinals(name)) {
+	    if (!API.crnInDB(name) || !API.crnInFinals(name)) {
 		prl("The Class with CRN " + name + " is not currently scheduled so it cannot be moved");
 		return;
 	    }
@@ -405,6 +405,18 @@ public class Console {
 	prl();
 	prl("=======================================================");
 	prl();
+
+	try {
+	    String os = System.getProperty("os.name");
+
+	    if (os.contains("Windows")) {
+		Runtime.getRuntime().exec("cls");
+	    } else {
+		Runtime.getRuntime().exec("clear");
+	    }
+	} catch (Exception exception) {
+	    //  Handle exception.
+	}
     }
 
 }
