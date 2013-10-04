@@ -27,6 +27,15 @@ public class StatsPrinter {
     public StatsPrinter(File f) throws IOException {
 	toFile = true;
 	form = new Formatter(new BufferedWriter(new FileWriter(f)));
+
+    }
+
+    /**
+     * closes the formatter if it is not closed
+     */
+    public void close() {
+	if (form != null)
+	    form.close();
     }
 
     public void printSectionHeader(String header) {

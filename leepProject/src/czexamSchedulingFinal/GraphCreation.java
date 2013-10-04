@@ -40,26 +40,32 @@ public class GraphCreation {
 	scheduledCourses = new ArrayList<>();
 
 	DatabaseConnection connect = project.connection;
-	Statement st = connect.getStatement();
+	Statement st = null;
+	try {
+	    st = connect.getStatement();
 
-	String finalsTable = CurrentProject.finals;
-	String studswfins = CurrentProject.studentsWithInfo;
-	String tableName = "graphcreateTemp";
+	    String finalsTable = CurrentProject.finals;
+	    String studswfins = CurrentProject.studentsWithInfo;
+	    String tableName = "graphcreateTemp";
 
-	String query = "CREATE TEMP TABLE " + tableName + " AS (SELECT t1.* FROM " + studswfins + " AS t1, "
-		+ finalsTable + " AS t2 WHERE CHARINDEX (t2.CourseCRN, t1.CourseCRN) > 0)";
-	st.executeUpdate(query);
+	    String query = "CREATE TEMP TABLE " + tableName + " AS (SELECT t1.* FROM " + studswfins + " AS t1, "
+		    + finalsTable + " AS t2 WHERE CHARINDEX (t2.CourseCRN, t1.CourseCRN) > 0)";
+	    st.executeUpdate(query);
 
-	addVerts(st, tableName);
-	addStudentsDeps(st, tableName);
-	if (project.settings.facultyConstraint)
-	    addFacultyDeps(st, tableName);
+	    addVerts(st, tableName);
+	    addStudentsDeps(st, tableName);
+	    if (project.settings.facultyConstraint)
+		addFacultyDeps(st, tableName);
 
-	//update course verts to include degrees
+	    //update course verts to include degrees
 
-	st.executeUpdate("DROP TABLE " + tableName);
-	st.close();
-
+	    st.executeUpdate("DROP TABLE " + tableName);
+	} catch (SQLException e) {
+	    throw new SQLException();
+	} finally {
+	    if (st != null)
+		st.close();
+	}
 	for (CourseVertex cv : cm.values())
 	    cv.setDegrees(g);
     }

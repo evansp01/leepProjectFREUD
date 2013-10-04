@@ -65,7 +65,7 @@ public class Console {
 		    exportToFile();
 		    break;
 		case MOVE_FINAL:
-		    deleteFinal();
+		    moveFinal();
 		    break;
 		case DELETE_FINAL:
 		    deleteFinal();
@@ -183,24 +183,34 @@ public class Console {
 	    String name = scan.nextLine();
 	    if (!API.unscheduleFinal(name)) {
 		prl("The Class with CRN " + name + " is not currently scheduled. You must schedule it before moving it");
+		return;
 	    }
 	    boolean[][] possibilities = API.listPossibleTimes(name);
-	    prl("The following times do not cause conflicts:");
-	    int maxDay = possibilities.length;
-	    int maxBlock = possibilities[0].length;
-	    for (int i = 0; i < maxDay; i++) {
-		pr("Day " + (i + 1) + ": Blocks: ");
-		for (int j = 0; j < maxBlock; j++) {
-		    if (possibilities[i][j]) {
-			pr((j + 1) + ". ");
+	    int maxDay = API.getDays();
+	    int maxBlock = API.getBlocks();
+	    if (possibilities == null) {
+		prl("Error getting blocks which do not cause conflicts");
+	    } else {
+		prl("The following times do not cause conflicts:");
+		for (int i = 0; i < maxDay; i++) {
+		    pr("Day " + (i + 1) + ": Blocks: ");
+		    for (int j = 0; j < maxBlock; j++) {
+			if (possibilities[i][j]) {
+			    pr((j + 1) + ". ");
+			}
 		    }
 		}
 	    }
-	    prl("Enter a day and block to schedule the exam for");
+	    prl("Enter a day and block of " + name + "'s new final exam or ");
+	    prl("    enter -1 if you do no longer wish to reschedule the exam");
 	    pr("Day: ");
 	    int day = scan.nextInt();
 	    prl("Block: ");
 	    int block = scan.nextInt();
+	    if (day == -1 && block == -1) {
+		prl("Aborting scheduling");
+		return;
+	    }
 	    if (day < 1 || block < 1 || day > maxDay || block > maxBlock) {
 		prl("Invalid block - returning to project menu");
 		return;
@@ -257,8 +267,8 @@ public class Console {
     private static boolean loadExistingProject() {
 	String project = NO_STRING;
 	while (true) {
-	    prl("Enter the path of the project you wish to open");
-	    pr("Path: ");
+	    prl("Enter the name of the project you wish to open");
+	    pr("Name: ");
 	    try {
 		project = scan.nextLine();
 	    } catch (Exception e) {

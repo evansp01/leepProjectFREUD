@@ -48,14 +48,15 @@ public class CreateFinalTable {
      * 
      * @param conn
      */
-    public static void maintainTables(DatabaseConnection conn) {
+    public static boolean maintainTables(DatabaseConnection conn) {
 	String studentsTable = CurrentProject.students;
 	String coursesTable = CurrentProject.courses;
 
 	String tableToCreate = CurrentProject.studentsWithInfo;
+	Statement st = null;
 	try {
 
-	    Statement st = conn.getStatement();
+	    st = conn.getStatement();
 	    String thingsToSelect = "t1.CourseCRN, t1.StudentIDNo, t2.FacFirstName, t2.FacLastName, t2.CrossListCode, t2.ActualEnroll";
 	    String query0 = "DROP TABLE IF EXISTS " + tableToCreate;
 	    String query1 = "CREATE TABLE " + tableToCreate + " AS SELECT " + thingsToSelect + " FROM " + studentsTable
@@ -72,7 +73,15 @@ public class CreateFinalTable {
 	    crossListCodeThings(tableToCreate, conn);
 
 	} catch (SQLException e) {
+	    return false;
+	} finally {
+	    if (st != null)
+		try {
+		    st.close();
+		} catch (SQLException e) {
+		}
 	}
+	return true;
 
     }
 
@@ -85,51 +94,72 @@ public class CreateFinalTable {
      * @param conn
      * @throws SQLException
      */
-    private static void crossListCodeThings(String dbname, DatabaseConnection conn) throws SQLException {
-	Statement findCrossList = conn.getStatement();
-	Statement update = conn.getStatement();
-	String thingsToSelect = "CourseCRN, CrossListCode, ActualEnroll";
-	String getCrossListed = "SELECT DISTINCT " + thingsToSelect + " FROM " + dbname
-		+ " WHERE CrossListCode IS NOT NULL ORDER BY CrossListCode";
-	ResultSet crossListed = findCrossList.executeQuery(getCrossListed);
+    private static boolean crossListCodeThings(String dbname, DatabaseConnection conn) {
 
-	Set<String> crnsOfCurrentCLC = new HashSet<>();
-	String currentCLC = null, previousCLC = null, currentCRN = null;
-	int totalEnroll = 0;
+	Statement findCrossList = null;
+	Statement update = null;
+	try {
+	    findCrossList = conn.getStatement();
+	    update = conn.getStatement();
+	    String thingsToSelect = "CourseCRN, CrossListCode, ActualEnroll";
+	    String getCrossListed = "SELECT DISTINCT " + thingsToSelect + " FROM " + dbname
+		    + " WHERE CrossListCode IS NOT NULL ORDER BY CrossListCode";
+	    ResultSet crossListed = findCrossList.executeQuery(getCrossListed);
 
-	while (crossListed.next()) {
-	    currentCLC = crossListed.getString(CROSSLISTCODE);
-	    currentCRN = crossListed.getString(COURSECRN);
-	    int currentEnroll = crossListed.getInt(ACTUALENROLL);
-	    //if no previous or if the previous is the same as the current
-	    if (previousCLC == null || previousCLC.equals(currentCLC)) {
-		int size = crnsOfCurrentCLC.size();
-		crnsOfCurrentCLC.add(currentCRN);
-		if (crnsOfCurrentCLC.size() > size) //if this isn't a repeat crn
-		    totalEnroll += currentEnroll;
-		previousCLC = currentCLC;
-	    } else { //there was a new cross list code
-		StringBuilder hyphenatedCRN = new StringBuilder();
-		StringBuilder query = new StringBuilder();
-		for (String crn : crnsOfCurrentCLC) {
-		    hyphenatedCRN.append(crn + "-");
-		    query.append("CourseCRN = '" + crn + "' OR ");
+	    Set<String> crnsOfCurrentCLC = new HashSet<>();
+	    String currentCLC = null, previousCLC = null, currentCRN = null;
+	    int totalEnroll = 0;
+
+	    while (crossListed.next()) {
+		currentCLC = crossListed.getString(CROSSLISTCODE);
+		currentCRN = crossListed.getString(COURSECRN);
+		int currentEnroll = crossListed.getInt(ACTUALENROLL);
+		//if no previous or if the previous is the same as the current
+		if (previousCLC == null || previousCLC.equals(currentCLC)) {
+		    int size = crnsOfCurrentCLC.size();
+		    crnsOfCurrentCLC.add(currentCRN);
+		    if (crnsOfCurrentCLC.size() > size) //if this isn't a repeat crn
+			totalEnroll += currentEnroll;
+		    previousCLC = currentCLC;
+		} else { //there was a new cross list code
+		    StringBuilder hyphenatedCRN = new StringBuilder();
+		    StringBuilder query = new StringBuilder();
+		    for (String crn : crnsOfCurrentCLC) {
+			hyphenatedCRN.append(crn + "-");
+			query.append("CourseCRN = '" + crn + "' OR ");
+		    }
+		    String hyphenatedCRNString = hyphenatedCRN.substring(0, hyphenatedCRN.length() - 1);
+		    String queryString = query.substring(0, query.length() - 4);
+		    String queryFin = "UPDATE " + dbname + " SET CourseCRN = '" + hyphenatedCRNString
+			    + "', ActualEnroll = '" + totalEnroll + "' WHERE " + queryString;
+		    update.executeUpdate(queryFin);
+
+		    //change to new crn
+		    previousCLC = currentCLC;
+		    totalEnroll = currentEnroll;
+		    crnsOfCurrentCLC.clear();
+		    crnsOfCurrentCLC.add(currentCRN);
+
 		}
-		String hyphenatedCRNString = hyphenatedCRN.substring(0, hyphenatedCRN.length() - 1);
-		String queryString = query.substring(0, query.length() - 4);
-		String queryFin = "UPDATE " + dbname + " SET CourseCRN = '" + hyphenatedCRNString
-			+ "', ActualEnroll = '" + totalEnroll + "' WHERE " + queryString;
-		update.executeUpdate(queryFin);
-
-		//change to new crn
-		previousCLC = currentCLC;
-		totalEnroll = currentEnroll;
-		crnsOfCurrentCLC.clear();
-		crnsOfCurrentCLC.add(currentCRN);
 
 	    }
 
-	}
+	} catch (SQLException e) {
+	    return false;
+	} finally {
+	    if (findCrossList != null)
+		try {
+		    findCrossList.close();
+		} catch (SQLException e) {
 
+		}
+	    if (update != null)
+		try {
+		    update.close();
+		} catch (SQLException e) {
+
+		}
+	}
+	return true;
     }
 }

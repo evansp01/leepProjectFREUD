@@ -29,32 +29,42 @@ public class SchedulerChecking {
      *            settings file
      * @throws SQLException
      */
-    public static void printSchedule(DatabaseConnection conn, String tableName, Settings sett) throws SQLException {
+    public static boolean printSchedule(DatabaseConnection conn, String tableName, Settings sett) {
 	int day = sett.days, block = sett.blocks;
 	Statement sts[] = new Statement[block];
 	ResultSet[] dayRS = new ResultSet[block];
-	for (int i = 0; i < block; i++)
-	    sts[i] = conn.getStatement();
 
 	int crossList = 1;
 
 	System.out.println("This is a printout of the schedule.\nThe numbers "
 		+ "in parenthesis signify that\nthe crns are cross listed (within blocks)\n");
-	for (int i = 0; i < day; i++) {
-	    for (int j = 0; j < block; j++) {
-		String query = "SELECT Distinct CourseCRN FROM " + tableName + " WHERE FinalDay = " + i
-			+ " AND FinalBlock = " + j;
-		dayRS[j] = sts[j].executeQuery(query);
-	    }
-	    crossList = Utilities.printDay(dayRS, i, crossList);
-	    System.out.println();
+	try {
+	    for (int i = 0; i < block; i++)
+		sts[i] = conn.getStatement();
+	    for (int i = 0; i < day; i++) {
+		for (int j = 0; j < block; j++) {
+		    String query = "SELECT Distinct CourseCRN FROM " + tableName + " WHERE FinalDay = " + i
+			    + " AND FinalBlock = " + j;
+		    dayRS[j] = sts[j].executeQuery(query);
+		}
+		crossList = Utilities.printDay(dayRS, i, crossList);
+		System.out.println();
 
+	    }
+	} catch (SQLException e) {
+	    return false;
+	} finally {
+	    for (int i = 0; i < block; i++)
+		try {
+		    sts[i].close();
+		} catch (SQLException e) {
+		}
 	}
-	for (int i = 0; i < block; i++)
-	    sts[i].close();
+	return true;
 
     }
 
+    //TODO close resources
     /**
      * does statistics on the current schedule and prints them
      * 
@@ -63,10 +73,33 @@ public class SchedulerChecking {
      * @param sett
      * @throws SQLException
      */
-    public static void stats(DatabaseConnection conn, String tableName, Settings sett) throws SQLException {
+    public static boolean stats(DatabaseConnection conn, String tableName, Settings sett) {
 	StatsPrinter sp = new StatsPrinter();
-	examDistribution(conn, tableName, sett, sp);
-	studentDistribution(conn, tableName, sett, sp);
+	Statement st1 = null;
+	Statement st2 = null;
+	try {
+
+	    st1 = conn.getStatement();
+	    st2 = conn.getStatement();
+	    examDistribution(st1, tableName, sett, sp);
+	    studentDistribution(st1, st2, tableName, sett, sp);
+	} catch (SQLException e) {
+	    return false;
+	} finally {
+	    if (st1 != null)
+		try {
+		    st1.close();
+		} catch (SQLException e) {
+
+		}
+	    if (st2 != null)
+		try {
+		    st2.close();
+		} catch (SQLException e) {
+
+		}
+	}
+	return true;
     }
 
     /**
@@ -79,7 +112,7 @@ public class SchedulerChecking {
      * @param sp
      * @throws SQLException
      */
-    public static void examDistribution(DatabaseConnection connect, String tableName, Settings sett, StatsPrinter sp)
+    public static void examDistribution(Statement st, String tableName, Settings sett, StatsPrinter sp)
 	    throws SQLException {
 
 	int days = sett.days;
@@ -89,8 +122,6 @@ public class SchedulerChecking {
 	//things that will eventually be printed
 	int[][] examsPerDayBlock = new int[days][blocks];
 	int[][] largeExamsPerDayBlock = new int[days][blocks];
-
-	Statement st = connect.getStatement();
 
 	String query1 = "SELECT DISTINCT CourseCRN, FinalDay, FinalBlock, ActualEnroll FROM " + tableName
 		+ " WHERE FinalDay != -1";
@@ -123,7 +154,7 @@ public class SchedulerChecking {
      * @param sp
      * @throws SQLException
      */
-    public static void studentDistribution(DatabaseConnection connect, String swf, Settings sett, StatsPrinter sp)
+    public static void studentDistribution(Statement st, Statement st2, String swf, Settings sett, StatsPrinter sp)
 	    throws SQLException {
 	int days = sett.days;
 	int blocks = sett.blocks;
@@ -142,9 +173,6 @@ public class SchedulerChecking {
 	StringBuilder listOf3Conflicts = new StringBuilder();
 	int[] conflicts = new int[2];
 	int[][] backToBackByDayBlock = new int[days][blocks];
-
-	Statement st = connect.getStatement();
-	Statement st2 = connect.getStatement();
 
 	String query1 = "SELECT DISTINCT StudentIDNo FROM " + swf;
 	ResultSet rs1 = st.executeQuery(query1);

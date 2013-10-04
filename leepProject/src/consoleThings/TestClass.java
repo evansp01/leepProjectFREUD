@@ -65,7 +65,7 @@ public class TestClass {
 	    //	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
 	    Exporter e = new Exporter();
 	    e.export(conn, CurrentProject.studentsWithInfo, sett);
-	} catch (SQLException | IOException e) {
+	} catch (IOException e) {
 	    e.printStackTrace();
 	}
 
