@@ -77,8 +77,8 @@ public class Console {
 		}
 		if (exit)
 		    break;
+		clearConsole();
 	    }
-
 	    clearConsole();
 
 	}
