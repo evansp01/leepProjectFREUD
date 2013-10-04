@@ -6,7 +6,12 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.jgrapht.graph.SimpleWeightedGraph;
-
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class DependenciesGraph<V, E extends DependentEdge> extends SimpleWeightedGraph<V, E> {
 
     private static final long serialVersionUID = 8624829045211494116L;

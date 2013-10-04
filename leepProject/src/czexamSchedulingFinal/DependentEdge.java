@@ -9,7 +9,8 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 
 /**
  * 
- * @author evan
+ * 
+ * @author Evan Palmer and Dana Ferranti
  * 
  */
 public class DependentEdge extends DefaultWeightedEdge {

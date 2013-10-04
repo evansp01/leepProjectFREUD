@@ -10,7 +10,12 @@ import consoleThings.Settings;
 import cutilities.StatsPrinter;
 import cutilities.Utilities;
 import databaseForMainProject.DatabaseConnection;
-
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class SchedulerChecking {
 
     /**

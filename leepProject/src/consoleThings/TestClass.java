@@ -11,7 +11,12 @@ import czexamSchedulingFinal.GraphCreation;
 import czexamSchedulingFinal.Scheduler;
 import databaseForMainProject.CreateFinalTable;
 import databaseForMainProject.DatabaseConnection;
-
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class TestClass {
 
     public static void main(String[] args) throws SQLException {
@@ -50,8 +55,8 @@ public class TestClass {
 	System.out.println(gc.getAlreadyScheduled().size());
 	System.out.println(schedule.size());
 	try {
-	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
-	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
+//	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
+//	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
 	    Exporter e = new Exporter();
 	    e.export(conn, CurrentProject.studentsWithInfo, sett);
 	} catch (SQLException | IOException e) {

@@ -1,7 +1,13 @@
 package consoleThings;
 
+import java.io.IOException;
 import java.util.Scanner;
-
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class Console {
     private static String path;
     private static Scanner scan;
@@ -105,6 +111,11 @@ public class Console {
 	String result = API.printCurrent();
 	if (result != null)
 	    prl(result);
+	System.out.println("Press [ENTER] To Continue");
+	try {
+	    System.in.read();
+	} catch (IOException e) {
+	}
 
     }
 
@@ -112,6 +123,11 @@ public class Console {
 	String result = API.printStatistics();
 	if (result != null)
 	    prl(result);
+	System.out.println("Press [ENTER] To Continue");
+	try {
+	    System.in.read();
+	} catch (IOException e) {
+	}
 
     }
 
@@ -170,8 +186,8 @@ public class Console {
     }
 
     private static void exitProject() {
-	API.closeProject();
 	prl("Closing project " + API.getWorkingProjectName());
+	API.closeProject();
 
     }
 

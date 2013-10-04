@@ -16,6 +16,12 @@ import czexamSchedulingFinal.Scheduler;
 import databaseForMainProject.CreateFinalTable;
 import databaseForMainProject.DatabaseConnection;
 
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class API {
 
     //	TODO all of this
@@ -225,11 +231,15 @@ public class API {
 	try {
 	    st = currentProject.connection.getStatement();
 	    ResultSet rs1 = st.executeQuery(query1);
-	    while (rs1.next())
-		sb.append(rs1.getString(1) + " was already scheduled\n");
+	    while (rs1.next()) {
+		sb.append(rs1.getString(1) + " was already scheduled");
+		sb.append(System.getProperty("line.separator"));
+	    }
 	    ResultSet rs2 = st.executeQuery(query2);
-	    while (rs2.next())
-		sb.append(rs2.getString(1) + " was not added because it is not in the master course list\n");
+	    while (rs2.next()) {
+		sb.append(rs2.getString(1) + " was not added because it is not in the master course list");
+		sb.append(System.getProperty("line.separator"));
+	    }
 	    st.executeUpdate(query3);
 	    st.executeUpdate("DROP TABLE " + tempTable);
 	} catch (SQLException e) {

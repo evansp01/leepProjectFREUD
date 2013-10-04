@@ -1,9 +1,20 @@
 package cutilities;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Collections;
+import java.util.Formatter;
 import java.util.HashMap;
-
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class StatsPrinter {
+    Formatter form;
     boolean toFile;
 
     public StatsPrinter() {
@@ -11,9 +22,9 @@ public class StatsPrinter {
 
     }
 
-    public StatsPrinter(String fileName) {
-	//TODO implement
+    public StatsPrinter(File f) throws IOException {
 	toFile = true;
+	form = new Formatter(new BufferedWriter(new FileWriter(f)));
     }
 
     public void printSectionHeader(String header) {
@@ -124,7 +135,7 @@ public class StatsPrinter {
 
     //cols is top row
     //rows is 2nd to last row
-    private static void printArray2D(int[][] array, String[] cols, String[] rows, int first, int others) {
+    private void printArray2D(int[][] array, String[] cols, String[] rows, int first, int others) {
 	StringBuilder headers = new StringBuilder("|%-" + first + "s |");
 	for (int i = 0; i < cols.length - 1; i++)
 	    headers.append("%" + others + "s|");
@@ -141,22 +152,29 @@ public class StatsPrinter {
 
     }
 
-    private static void format(String s, Object[] o) {
-	System.out.format(s, o);
+    private void format(String s, Object[] o) {
+	if (!toFile)
+	    System.out.format(s, o);
+	else
+	    form.format(s, o);
     }
 
-    private static void prl() {
+    private void prl() {
 	prl("");
     }
 
-    private static void prl(Object s) {
-
-	System.out.println(s);
+    private void prl(Object s) {
+	if (!toFile)
+	    System.out.println(s);
+	else
+	    form.format("%s%n", s);
     }
 
-    private static void pr(Object s) {
-
-	System.out.print(s);
+    private void pr(Object s) {
+	if (!toFile)
+	    System.out.print(s);
+	else
+	    form.format("%s", s);
     }
 
 }

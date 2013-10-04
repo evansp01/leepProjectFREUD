@@ -15,10 +15,10 @@ import consoleThings.CurrentProject;
 
 /**
  * 
- * @author Evan Palmer
+ * Database connector -- abstracts database connection also includes methods for
+ * loading the csv files required for the program to run
  * 
- *         Database connector -- abstracts database connection also includes
- *         methods for loading the csv files required for the program to run
+ * @author Evan Palmer and Dana Ferranti
  * 
  */
 //prepared statements

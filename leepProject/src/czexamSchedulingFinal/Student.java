@@ -6,7 +6,7 @@ import java.util.Arrays;
  * Student class holds additional information about students -- their student
  * idF and when they have exams
  * 
- * @author evan
+ * @author Evan Palmer and Dana Ferranti
  * 
  */
 

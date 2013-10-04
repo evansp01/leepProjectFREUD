@@ -1,5 +1,10 @@
 package czexamSchedulingFinal;
-
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class PreScheduledExam {
     String name;
     int day;

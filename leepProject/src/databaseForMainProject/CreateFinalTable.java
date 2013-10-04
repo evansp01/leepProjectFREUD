@@ -11,6 +11,12 @@ import consoleThings.CurrentProject;
 
 import czexamSchedulingFinal.CourseVertex;
 
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class CreateFinalTable {
 
     public static void updateExams(DatabaseConnection conn, HashMap<String, CourseVertex> map) {

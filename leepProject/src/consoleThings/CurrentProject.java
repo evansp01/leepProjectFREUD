@@ -1,7 +1,12 @@
 package consoleThings;
 
 import databaseForMainProject.DatabaseConnection;
-
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class CurrentProject {
     public String name;
     public Settings settings;

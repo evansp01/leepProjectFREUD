@@ -8,7 +8,12 @@ import java.util.HashMap;
 
 import consoleThings.CurrentProject;
 import databaseForMainProject.DatabaseConnection;
-
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 public class GraphCreation {
 
     private CurrentProject project;

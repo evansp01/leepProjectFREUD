@@ -8,7 +8,7 @@ import consoleThings.Settings;
  * holds addition information for courses including crn, degree, weighted
  * degree, and final block and time
  * 
- * @author evan
+ * @author Evan Palmer and Dana Ferranti
  * 
  */
 

@@ -1,6 +1,8 @@
 package czexamSchedulingFinal;
 
 import java.util.ArrayList;
+
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.PriorityQueue;
@@ -9,6 +11,12 @@ import java.util.Random;
 import consoleThings.CurrentProject;
 import consoleThings.Settings;
 
+/**
+ * 
+ * 
+ * @author Evan Palmer and Dana Ferranti
+ * 
+ */
 //tree set
 
 ///Don't need to remove schedued from course vertex no longer in use because of pq -- also can remove all those hash tables
