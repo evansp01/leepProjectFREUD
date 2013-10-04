@@ -183,7 +183,7 @@ public class API {
 	    return "Error during graph creation: this shouldn't happen";
 	}
 	Scheduler scheduler = new Scheduler(gc, currentProject);
-	if (!scheduler.schedule())
+	if (scheduler.schedule() == Scheduler.FAILURE)
 	    return "Could not find a valid schedule for this project";
 	return null;
 
@@ -260,7 +260,7 @@ public class API {
 	    return "Error during graph creation: this shouldn't happen";
 	}
 	Scheduler scheduler = new Scheduler(gc, currentProject);
-	if (!scheduler.schedule())
+	if (scheduler.schedule() == Scheduler.FAILURE)
 	    return "Could not find a valid schedule for this project";
 	if (sb.toString().length() > 0)
 	    return sb.toString();

@@ -10,6 +10,7 @@ import consoleThings.Settings;
 import cutilities.StatsPrinter;
 import cutilities.Utilities;
 import databaseForMainProject.DatabaseConnection;
+
 /**
  * 
  * 
@@ -54,13 +55,31 @@ public class SchedulerChecking {
 
     }
 
-    public static void stats(DatabaseConnection conn, String dbname, Settings sett) throws SQLException {
+    /**
+     * does statistics on the current schedule and prints them
+     * 
+     * @param conn
+     * @param tableName
+     * @param sett
+     * @throws SQLException
+     */
+    public static void stats(DatabaseConnection conn, String tableName, Settings sett) throws SQLException {
 	StatsPrinter sp = new StatsPrinter();
-	examDistribution(conn, dbname, sett, sp);
-	studentDistribution(conn, dbname, sett, sp);
+	examDistribution(conn, tableName, sett, sp);
+	studentDistribution(conn, tableName, sett, sp);
     }
 
-    public static void examDistribution(DatabaseConnection connect, String swf, Settings sett, StatsPrinter sp)
+    /**
+     * Does the statistics related to only the exam distribution and not the
+     * individual students
+     * 
+     * @param connect
+     * @param tableName
+     * @param sett
+     * @param sp
+     * @throws SQLException
+     */
+    public static void examDistribution(DatabaseConnection connect, String tableName, Settings sett, StatsPrinter sp)
 	    throws SQLException {
 
 	int days = sett.days;
@@ -73,7 +92,7 @@ public class SchedulerChecking {
 
 	Statement st = connect.getStatement();
 
-	String query1 = "SELECT DISTINCT CourseCRN, FinalDay, FinalBlock, ActualEnroll FROM " + swf
+	String query1 = "SELECT DISTINCT CourseCRN, FinalDay, FinalBlock, ActualEnroll FROM " + tableName
 		+ " WHERE FinalDay != -1";
 	ResultSet rs1 = st.executeQuery(query1);
 
@@ -95,6 +114,15 @@ public class SchedulerChecking {
 
     }
 
+    /**
+     * Does the statistics related to students and exam distribution
+     * 
+     * @param connect
+     * @param swf
+     * @param sett
+     * @param sp
+     * @throws SQLException
+     */
     public static void studentDistribution(DatabaseConnection connect, String swf, Settings sett, StatsPrinter sp)
 	    throws SQLException {
 	int days = sett.days;

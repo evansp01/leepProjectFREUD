@@ -29,6 +29,9 @@ public class Student {
 	blocks = new boolean[days][blocksPerDay];
     }
 
+    /**
+     * Clears this students blocks array so that all block are unoccupied
+     */
     public void clear() {
 	for (boolean[] b : blocks)
 	    Arrays.fill(b, false);

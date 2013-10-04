@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import consoleThings.CurrentProject;
 import databaseForMainProject.DatabaseConnection;
+
 /**
  * 
  * 
@@ -23,8 +24,9 @@ public class GraphCreation {
     private ArrayList<PreScheduledExam> scheduledCourses;
 
     /**
-     * constructor takes a project argument and throws a SQL exception if
-     * something fucks up
+     * attempts to create a graph from a given project constructor takes a
+     * project argument which provides databases and settings and throws a sql
+     * exception if something goes wrong
      * 
      * @param project
      * @throws SQLException
@@ -62,23 +64,51 @@ public class GraphCreation {
 	    cv.setDegrees(g);
     }
 
+    /**
+     * Getter for the dependencies graph
+     * 
+     * @return graph the dependencies graph
+     */
     public DependenciesGraph<String, DependentEdge> getGraph() {
 	return g;
     }
 
+    /**
+     * getter for the students map
+     * 
+     * @return studentmap a mapping of id numbers to student objects
+     */
     public HashMap<String, Student> getStudentMap() {
 	return sm;
     }
 
+    /**
+     * getter for the courses map
+     * 
+     * @return coursemap a mapping of course crns to course objects
+     */
     public HashMap<String, CourseVertex> getCourseMap() {
 	return cm;
     }
 
+    /**
+     * getter for prescheduled exams
+     * 
+     * @return a list of all already scheduled exams
+     */
     public ArrayList<PreScheduledExam> getAlreadyScheduled() {
 	return scheduledCourses;
     }
 
     public static final int COURSECRN = 1, ENROLLMENT = 2, FDAY = 3, FBLOCK = 4;
+
+    /**
+     * Adds the course verticies to the graph
+     * 
+     * @param st
+     * @param tableName
+     * @throws SQLException
+     */
 
     private void addVerts(Statement st, String tableName) throws SQLException {
 	String getCourseCRNs = "SELECT DISTINCT CourseCRN, ActualEnroll, FinalDay, FinalBlock FROM " + tableName;
@@ -108,6 +138,13 @@ public class GraphCreation {
 
     public static final int ID_STUDENT = 1, CRN_STUDENT = 2;
 
+    /**
+     * Add the student dependencies to the graph
+     * 
+     * @param st
+     * @param tableName
+     * @throws SQLException
+     */
     private void addStudentsDeps(Statement st, String tableName) throws SQLException {
 	String getIDCRNPairs = "SELECT DISTINCT StudentIDNo, CourseCRN FROM " + tableName + " ORDER BY StudentIDNo";
 	ResultSet orderedIDs = st.executeQuery(getIDCRNPairs);
@@ -153,6 +190,13 @@ public class GraphCreation {
 
     public static final int FIRST_FAC = 1, LAST_FAC = 2, CRN_FAC = 3;
 
+    /**
+     * add faculty dependencies to the graph
+     * 
+     * @param st
+     * @param tableName
+     * @throws SQLException
+     */
     private void addFacultyDeps(Statement st, String tableName) throws SQLException {
 	String getIDCRNPairs = "SELECT DISTINCT FacFirstName, FacLastName, CourseCRN FROM " + tableName
 		+ " ORDER BY FacFirstName, FacLastName";
@@ -189,51 +233,6 @@ public class GraphCreation {
 
 	}
 	orderedIDs.close();
-    }
-
-    public static void main(String[] args) {
-	//	String url = "jdbc:mysql://localhost:3306/leep";
-	//	String usr = "javauser";
-	//	String pass = "testpass";
-	//	String sem = "201209";
-	//	GraphCreation f = new GraphCreation(null);
-	//	boolean useB2B = true;
-
-	//	Scheduler schedule = new Scheduler(f.getGraph(), f.getStudentMap(), f.getEnrollment(), f.getCrnToFac(),
-	//		f.getFacToCrn());
-	//	//for (int i=0; i<200; i++) { 
-	//	//if(schedule.Schedule(4, 4)) {   
-	//	HashMap<Integer, ArrayList<Integer>> b2b = schedule.getB2BInput();
-	//	while (!schedule.Schedule(DAYS, BLOCKS, b2b, useB2B)) {
-	//	    f = new GraphCreation("studswfins201209", url, usr, pass);
-	//	    schedule = new Scheduler(f.getGraph(), f.getStudentMap(), f.getEnrollment(), f.getCrnToFac(),
-	//		    f.getFacToCrn());
-	//	}
-	//	//statistics using our own data stored in the graph, edges, etc.
-	//	//		NewestSchedulingStats.backToBackPerStud(schedule); 
-	//	//		NewestSchedulingStats.examsInADay(schedule); 
-	//	//		NewestSchedulingStats.examsDepCheck(schedule); 
-	//	System.out.println(" ");
-	//	//statistics using mysql data
-	//	SchedulerCheck schedch = new SchedulerCheck();
-	//	schedch.organizeCourses(schedule);
-	//	schedch.makeStudMap(schedule);
-	//
-	//	schedch.numB2BFinalsPerStud(sem, DAYS, BLOCKS, b2b);
-	//	schedch.numFinalDaysPerStud(sem, DAYS);
-	//	schedch.numExamsPerBlock(sem, DAYS);
-	//	schedch.numStudsPerBlock(schedule);
-	//	schedch.miscStats(sem, DAYS);
-	//	schedch.largeExamPlacement(schedule);
-	//
-	//	schedch.printCRNSinDay(0);
-	//	schedch.printCRNSinDay(1);
-	//	schedch.printCRNSinDay(2);
-	//	schedch.printCRNSinDay(3);
-	//	//}
-	//	//}
-	//	//schedule.getOneGoodSchedule(4, 4);  
-
     }
 
 }

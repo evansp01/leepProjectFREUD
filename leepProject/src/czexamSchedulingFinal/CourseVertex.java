@@ -115,10 +115,20 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	return wdegree;
     }
 
+    /**
+     * gets the enrollment of this course
+     * 
+     * @return
+     */
     public int getEnrollment() {
 	return enrollment;
     }
 
+    /**
+     * returns true if this course is already scheduled
+     * 
+     * @return
+     */
     public boolean isScheduled() {
 	return !(day == -1 && block == -1);
     }
@@ -141,12 +151,21 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	return LESS;
     }
 
-    //things I am unsure about
-
+    /**
+     * sets a slot to unavailable for this course
+     * 
+     * @param day
+     * @param block
+     */
     public void removeSlot(int day, int block) {
 	degreeOfConflict[day][block] = THREE_IN_DAY;
     }
 
+    /**
+     * sets a day to unavailable for this course
+     * 
+     * @param day
+     */
     public void removeDay(int day) {
 	//set each block to -1 to denote the total unacceptability of the day
 	for (int block = 0; block < degreeOfConflict.length; block++) {
@@ -154,6 +173,12 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	}
     }
 
+    /**
+     * returns if any slots in this day are available
+     * 
+     * @param day
+     * @return
+     */
     public boolean isAvailable(int day) {
 	for (int block : degreeOfConflict[day]) {//returns true if at least one slot is acceptable 
 	    if (block != THREE_IN_DAY) //day is unacceptable if all of its slots are -1
@@ -162,17 +187,31 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	return false;
     }
 
+    /**
+     * returns the array representing degrees of conflict for this course
+     * 
+     * @return
+     */
     public int[][] degreeOfConflict() {
 	return degreeOfConflict;
     }
 
+    /**
+     * adds a back to back conflict for a day and block for this course
+     * 
+     * @param day
+     * @param block
+     */
     public void addBlockB2BConflict(int day, int block) {
 	//add unless the block is already impossible
 	if (degreeOfConflict[day][block] != THREE_IN_DAY)
 	    degreeOfConflict[day][block]++;
     }
 
-    //needs freaking to be generalized
+    /**
+     * updates the parameters for this courses sorting methods based on its
+     * degreeOfConflict array
+     */
     public void updateAvailability() {
 	acceptableSlots = 0;
 	favorableSlots = 0;

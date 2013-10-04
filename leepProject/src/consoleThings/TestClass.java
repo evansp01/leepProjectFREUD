@@ -4,21 +4,27 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import cStatistics.SchedulerChecking;
 import cutilities.Exporter;
 import czexamSchedulingFinal.CourseVertex;
 import czexamSchedulingFinal.GraphCreation;
 import czexamSchedulingFinal.Scheduler;
 import databaseForMainProject.CreateFinalTable;
 import databaseForMainProject.DatabaseConnection;
+
 /**
- * 
+ * A test class to test functionality of various features without running them
+ * through the console
  * 
  * @author Evan Palmer and Dana Ferranti
  * 
  */
 public class TestClass {
-
+    /**
+     * main method runs test
+     * 
+     * @param args
+     * @throws SQLException
+     */
     public static void main(String[] args) throws SQLException {
 	int x = 0;
 	String url = "jdbc:h2:~/test";
@@ -55,8 +61,8 @@ public class TestClass {
 	System.out.println(gc.getAlreadyScheduled().size());
 	System.out.println(schedule.size());
 	try {
-//	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
-//	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
+	    //	    SchedulerChecking.stats(conn, CurrentProject.studentsWithInfo, sett);
+	    //	    SchedulerChecking.printSchedule(conn, CurrentProject.studentsWithInfo, sett);
 	    Exporter e = new Exporter();
 	    e.export(conn, CurrentProject.studentsWithInfo, sett);
 	} catch (SQLException | IOException e) {

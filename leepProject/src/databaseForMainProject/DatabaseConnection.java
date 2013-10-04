@@ -170,6 +170,17 @@ public class DatabaseConnection {
 	return result;
     }
 
+    /**
+     * Makes a temporary table
+     * 
+     * @param fileName
+     *            path to the temporary table
+     * @param tableName
+     *            name of table to create
+     * @return returns an integer describing success or failure. A value of 0
+     *         indicates success. Otherwise the error string will describe the
+     *         error
+     */
     public int loadFinalTable(String fileName, String tableName) {
 	int result = 0;
 	result = generalLoader(fileName, tableName, ColsForFinalList, TypesForFinalList, DELIM, primKeyForFinalList,

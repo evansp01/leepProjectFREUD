@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
+
 /**
- * 
+ * A rather large number of formatted printing methods which are used to display
+ * the things found in schedulerChecking
  * 
  * @author Evan Palmer and Dana Ferranti
  * 

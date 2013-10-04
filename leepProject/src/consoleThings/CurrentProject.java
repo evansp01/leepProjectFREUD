@@ -2,7 +2,8 @@ package consoleThings;
 
 import databaseForMainProject.DatabaseConnection;
 /**
- * 
+ * A class to keep track of information relevant to the current project.
+ * Also has constants with the default names of various tables and files in the projectF
  * 
  * @author Evan Palmer and Dana Ferranti
  * 
@@ -16,7 +17,12 @@ public class CurrentProject {
 	    studentsWithInfo = "FREUDStudentsWithInfo";
     public static final String password = "", user = "user", dbFile = "project.h2.db", dbFileName = "project",
 	    urlStart = "jdbc:h2:", settingsFile = "project_settings.txt";
-
+/**
+ * create a current project from a name, a settings file, and a database connectionF
+ * @param name
+ * @param settings
+ * @param connection
+ */
     public CurrentProject(String name, Settings settings, DatabaseConnection connection) {
 	this.name = name;
 	this.settings = settings;

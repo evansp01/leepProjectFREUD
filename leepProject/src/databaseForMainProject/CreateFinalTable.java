@@ -18,7 +18,13 @@ import czexamSchedulingFinal.CourseVertex;
  * 
  */
 public class CreateFinalTable {
-
+    /**
+     * Updates the final exams based on the the values in the supplied
+     * courseVertex mapF
+     * 
+     * @param conn
+     * @param map
+     */
     public static void updateExams(DatabaseConnection conn, HashMap<String, CourseVertex> map) {
 	String dbname = CurrentProject.studentsWithInfo;
 	try {
@@ -34,6 +40,14 @@ public class CreateFinalTable {
 
     }
 
+    /**
+     * sets up the desired tables after they have been imported creates the
+     * studentsWithInfo table which is used throughout the program as the main
+     * table, and adds final days and blocks. Also deals with cross listed
+     * courses
+     * 
+     * @param conn
+     */
     public static void maintainTables(DatabaseConnection conn) {
 	String studentsTable = CurrentProject.students;
 	String coursesTable = CurrentProject.courses;
@@ -64,6 +78,13 @@ public class CreateFinalTable {
 
     public static int CROSSLISTCODE = 2, COURSECRN = 1, ACTUALENROLL = 3;
 
+    /**
+     * deal with cross listed courses by hyphenating crns
+     * 
+     * @param dbname
+     * @param conn
+     * @throws SQLException
+     */
     private static void crossListCodeThings(String dbname, DatabaseConnection conn) throws SQLException {
 	Statement findCrossList = conn.getStatement();
 	Statement update = conn.getStatement();

@@ -6,8 +6,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+
 /**
- * 
+ * A Class to keep track of the settings of the current project
  * 
  * @author Evan Palmer and Dana Ferranti
  * 
@@ -21,6 +22,15 @@ public class Settings {
     public static final int MAX_BACK_TO_BACK = 1, LARGE = 50;
     public static final int MAX_EXAM_PER_DAY = 2;
 
+    /**
+     * creates a settings file which stores all project settings
+     * 
+     * @param days
+     * @param blocks
+     * @param largeConstraint
+     * @param facultyConstraint
+     * @param backToBack
+     */
     public Settings(int days, int blocks, boolean largeConstraint, boolean facultyConstraint, boolean[][] backToBack) {
 	this.days = days;
 	this.blocks = blocks;
@@ -33,6 +43,13 @@ public class Settings {
 	return s.backToBack[block1][block2];
     }
 
+    /**
+     * Parses a settings file
+     * 
+     * @param settingsFile
+     * @return Object -- an error string on failure, or a Settings class on
+     *         success
+     */
     public static Object parseSettings(File settingsFile) {
 	BufferedReader settingsReader = null;
 	int days = -1;

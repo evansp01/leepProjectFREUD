@@ -8,7 +8,7 @@ import java.util.Set;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 /**
- * 
+ * An edge class for use by the DependeciesGraph class
  * 
  * @author Evan Palmer and Dana Ferranti
  * 
