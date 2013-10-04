@@ -86,8 +86,6 @@ public class Console {
 
     //PROJECT SPECIFIC METHODS
 
-    //    halt after output on display and stats
-    //TODO
     private static void addNewFinal() {
 	String finals = NO_STRING;
 
@@ -176,11 +174,15 @@ public class Console {
 
     }
 
-    //TODO: test
+    //TODO this needs some testing
     public static void moveFinal() {
 	try {
 	    prl("Enter the CRN of the course you would like to move");
 	    String name = scan.nextLine();
+	    if (!API.crnInDB(name) && API.crnInFinals(name)) {
+		prl("The Class with CRN " + name + " is not currently scheduled so it cannot be moved");
+		return;
+	    }
 	    if (!API.unscheduleFinal(name)) {
 		prl("The Class with CRN " + name + " is not currently scheduled. You must schedule it before moving it");
 		return;

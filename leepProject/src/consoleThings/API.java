@@ -2,16 +2,10 @@ package consoleThings;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 
-import cStatistics.SchedulerChecking;
-import cutilities.Exporter;
 import cutilities.Utilities;
 import czexamSchedulingFinal.GraphCreation;
-import czexamSchedulingFinal.Pair;
 import czexamSchedulingFinal.Scheduler;
 import databaseForMainProject.CreateFinalTable;
 import databaseForMainProject.DatabaseConnection;
@@ -244,6 +238,14 @@ public class API {
 
     public static String printCurrent() {
 	return APIProject.printCurrent();
+    }
+
+    public static boolean crnInDB(String name) {
+	return APIProject.crnInDB(name);
+    }
+
+    public static boolean crnInFinals(String name) {
+	return APIProject.crnInFinals(name);
     }
 
 }

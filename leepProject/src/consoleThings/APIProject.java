@@ -14,6 +14,8 @@ import czexamSchedulingFinal.Pair;
 import czexamSchedulingFinal.Scheduler;
 import databaseForMainProject.DatabaseConnection;
 
+//TODO in general these method need testing
+
 public class APIProject {
     private static CurrentProject currentProject;
     private static boolean TESTING = false;
@@ -22,7 +24,6 @@ public class APIProject {
 	currentProject = cp;
     }
 
-    //TODO move all this stuff somewhere else
     /**
      * return the name of the current project
      * 
@@ -47,8 +48,6 @@ public class APIProject {
     }
 
     //add entries to database then run scheduler
-    //TODO test
-
     public static String scheduleNewFinals(String file) {
 	file = "/home/evan/file.txt";
 	String tempTable = "FREUDtoAdd";
@@ -198,7 +197,6 @@ public class APIProject {
     }
 
     //just an sql update query, with the possibility of another query
-    //TODO check
     public static boolean unscheduleFinal(String name) {
 	String dbname = CurrentProject.studentsWithInfo;
 	String queryFin = "UPDATE " + dbname + " SET FinalDay = '-1', "
@@ -221,7 +219,6 @@ public class APIProject {
     }
 
     //create the graph and list possible times
-    //TODO check
     public static boolean[][] listPossibleTimes(String name) {
 	//wont work with cross listed courses
 	//update equals to do that thing
@@ -297,8 +294,32 @@ public class APIProject {
 
     }
 
-    public boolean crnInDB(String crn) {
+    public static boolean crnInDB(String crn) {
 	String query = "SELECT Count(CourseCRN) FROM " + CurrentProject.courses + " WHERE CourseCRN = '" + crn
+		+ " GROUP BY CourseCRN";
+	Statement st = null;
+	int count = 0;
+	try {
+	    st = currentProject.connection.getStatement();
+
+	    ResultSet rs = st.executeQuery(query);
+	    rs.next();
+	    count = rs.getInt(1);
+
+	} catch (SQLException e) {
+	    return false;
+	} finally {
+	    if (st != null)
+		try {
+		    st.close();
+		} catch (SQLException e) {
+		}
+	}
+	return count > 0;
+    }
+
+    public static boolean crnInFinals(String name) {
+	String query = "SELECT Count(CourseCRN) FROM " + CurrentProject.finals + " WHERE CourseCRN = '" + name
 		+ " GROUP BY CourseCRN";
 	Statement st = null;
 	int count = 0;
