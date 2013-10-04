@@ -2,6 +2,7 @@ package consoleThings;
 
 import java.io.IOException;
 import java.util.Scanner;
+
 /**
  * 
  * 
@@ -175,13 +176,44 @@ public class Console {
 
     }
 
-    //needs implementation
-    //TODO: implement this method
+    //TODO: test
     public static void moveFinal() {
-	String name = "";
-	API.unscheduleFinal(name);
-	Object[] possibilities = API.listPossibleTimes(name);
-	String result = API.scheduleFinalForTime(name, -1, -1);
+	try {
+	    prl("Enter the CRN of the course you would like to move");
+	    String name = scan.nextLine();
+	    if (!API.unscheduleFinal(name)) {
+		prl("The Class with CRN " + name + " is not currently scheduled. You must schedule it before moving it");
+	    }
+	    boolean[][] possibilities = API.listPossibleTimes(name);
+	    prl("The following times do not cause conflicts:");
+	    int maxDay = possibilities.length;
+	    int maxBlock = possibilities[0].length;
+	    for (int i = 0; i < maxDay; i++) {
+		pr("Day " + (i + 1) + ": Blocks: ");
+		for (int j = 0; j < maxBlock; j++) {
+		    if (possibilities[i][j]) {
+			pr((j + 1) + ". ");
+		    }
+		}
+	    }
+	    prl("Enter a day and block to schedule the exam for");
+	    pr("Day: ");
+	    int day = scan.nextInt();
+	    prl("Block: ");
+	    int block = scan.nextInt();
+	    if (day < 1 || block < 1 || day > maxDay || block > maxBlock) {
+		prl("Invalid block - returning to project menu");
+		return;
+	    }
+
+	    String result = API.scheduleFinalForTime(name, day - 1, block - 1);
+	    if (result == null)
+		prl("Scheduling successful");
+	    else
+		prl(result);
+	} catch (NumberFormatException e) {
+	    prl("Error: block and day must be integers - returning to project menu");
+	}
 
     }
 

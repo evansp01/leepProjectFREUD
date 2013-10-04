@@ -379,7 +379,7 @@ public class API {
 
     //create the graph and list possible times
     //TODO check
-    public static Pair[] listPossibleTimes(String name) {
+    public static boolean[][] listPossibleTimes(String name) {
 	//wont work with cross listed courses
 	//update equals to do that thing
 	String query1 = "SELECT COUNT(CourseCRN), CourseCRN FROM " + CurrentProject.finals
@@ -406,7 +406,12 @@ public class API {
 	}
 	if (al == null)
 	    return null;
-	return (Pair[]) al.toArray();
+	boolean[][] results = new boolean[currentProject.settings.days][currentProject.settings.blocks];
+	for (int i = 0; i < al.size(); i++) {
+	    Pair p = al.get(i);
+	    results[p.day()][p.block()] = true;
+	}
+	return results;
     }
 
     //just an sql update query
