@@ -17,8 +17,6 @@ import czexamSchedulingFinal.Scheduler;
 import databaseForMainProject.CreateFinalTable;
 import databaseForMainProject.DatabaseConnection;
 
-//TODO in general these method need testing
-
 public class APIProject {
     private static CurrentProject currentProject;
     private static boolean TESTING = false;

@@ -242,9 +242,9 @@ public class Console {
     private static int projectOptions() {
 	prl("Your working project is: " + API.getWorkingProjectName());
 	prl("What would you like to do?");
-	prl("\t" + NEW_FINAL + " -- Schedule finals for a group of unscheduled courses");
+	prl("\t" + NEW_FINAL + " -- Schedule finals for a group of currently unscheduled courses");
 	prl("\t" + MOVE_FINAL + " -- Move a currently scheduled final to a new time manually");
-	prl("\t" + DELETE_FINAL + " -- Unschedule a currently scheduled finals");
+	prl("\t" + DELETE_FINAL + " -- Unschedule finals for a group currently scheduled courses");
 	prl("\t" + PRINT_CURRENT + " -- Display the current schedule");
 	prl("\t" + PRINT_STATS + " -- Display statistics about the current schedule");
 	prl("\t" + EXPORT + " -- Export the schedule to a file");
