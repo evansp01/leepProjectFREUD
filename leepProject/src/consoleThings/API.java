@@ -131,8 +131,23 @@ public class API {
 	    settings = (Settings) o;
 	else if (o instanceof String)
 	    return (String) o;
+
+	File createdDirectory = (new File(path + File.separator + name));
+	String result = createProject(name, folder, path, reqs, settings, createdDirectory);
+	//delete folder that was created if things screw up
+	if (result != null) {
+	    if (createdDirectory.exists())
+		Utilities.deleteDir(createdDirectory);
+	}
+	return result;
+    }
+
+    //the part of the method that creates the folder -- if this fails, the folder should be deleted
+    private static String createProject(String name, String folder, String path, File[] reqs, Settings settings,
+	    File dir) {
+
 	//create directory
-	if (!(new File(path + File.separator + name)).mkdirs())
+	if (!dir.mkdirs())
 	    return "could not create directory in documents folder";
 	try {
 	    Utilities.copyFile(reqs[CONFIG], new File(path + File.separator + name + File.separator
