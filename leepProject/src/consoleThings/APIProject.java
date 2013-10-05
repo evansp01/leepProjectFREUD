@@ -2,6 +2,7 @@ package consoleThings;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -9,9 +10,11 @@ import java.util.ArrayList;
 
 import cStatistics.SchedulerChecking;
 import cutilities.Exporter;
+import czexamSchedulingFinal.CourseVertex;
 import czexamSchedulingFinal.GraphCreation;
 import czexamSchedulingFinal.Pair;
 import czexamSchedulingFinal.Scheduler;
+import databaseForMainProject.CreateFinalTable;
 import databaseForMainProject.DatabaseConnection;
 
 //TODO in general these method need testing
@@ -49,7 +52,6 @@ public class APIProject {
 
     //add entries to database then run scheduler
     public static String scheduleNewFinals(String file) {
-	file = "/home/evan/file.txt";
 	String tempTable = "FREUDtoAdd";
 	StringBuilder sb = new StringBuilder();
 	int result = currentProject.connection.loadFinalTable(file, tempTable);
@@ -78,8 +80,6 @@ public class APIProject {
 	    st.executeUpdate(query3);
 	    st.executeUpdate("DROP TABLE " + tempTable);
 	} catch (SQLException e) {
-	    if (TESTING)
-		System.out.println(e.getMessage());
 	    return "error accessing database to add finals: " + e.getMessage();
 	} finally {
 	    if (st != null)
@@ -97,6 +97,7 @@ public class APIProject {
 	Scheduler scheduler = new Scheduler(gc, currentProject);
 	if (scheduler.schedule() == Scheduler.FAILURE)
 	    return "Could not find a valid schedule for this project";
+	CreateFinalTable.updateExams(currentProject.connection, scheduler.getCourseMap());
 	if (sb.toString().length() > 0)
 	    return sb.toString();
 	return null;
@@ -161,8 +162,6 @@ public class APIProject {
     //a bunch of calls to unscheduleFinal and some parsing
     public static String unscheduleFinals(String file) {
 	StringBuilder sb = new StringBuilder();
-	if (TESTING)
-	    file = "/home/evan/file.txt";
 	String tempTable = "FREUDtoUnschedule";
 	int result = currentProject.connection.loadFinalTable(file, tempTable);
 	if (result != DatabaseConnection.SUCCESS)
@@ -199,13 +198,16 @@ public class APIProject {
     //just an sql update query, with the possibility of another query
     public static boolean unscheduleFinal(String name) {
 	String dbname = CurrentProject.studentsWithInfo;
-	String queryFin = "UPDATE " + dbname + " SET FinalDay = '-1', "
-		+ "FinalBlock = '-1' WHERE CHARINDEX(CourseCRN,'" + name + "')>0";
+	String queryFin = "UPDATE " + dbname + " SET FinalDay = '-1', " + "FinalBlock = '-1' WHERE CHARINDEX('" + name
+		+ "',CourseCRN)>0";
+	String query3 = "DELETE FROM " + CurrentProject.finals + " WHERE CourseCRN = '" + name + "'";
 	Statement st = null;
 	try {
 	    st = currentProject.connection.getStatement();
 	    st.executeUpdate(queryFin);
+	    st.executeUpdate(query3);
 	} catch (SQLException e) {
+	    System.out.println(e.getMessage());
 	    return false;
 	} finally {
 	    if (st != null)
@@ -222,28 +224,37 @@ public class APIProject {
     public static boolean[][] listPossibleTimes(String name) {
 	//wont work with cross listed courses
 	//update equals to do that thing
-	String query1 = "SELECT COUNT(CourseCRN), CourseCRN FROM " + CurrentProject.finals
-		+ " WHERE CHARINDEX(CourseCRN,'" + name + "')>0 GROUP BY CourseCRN";
+	String query1 = "SELECT COUNT(CourseCRN) FROM " + CurrentProject.finals + " WHERE CourseCRN = '" + name
+		+ "' GROUP BY CourseCRN";
 	String query2 = "MERGE INTO " + CurrentProject.finals + " (CourseCRN) VALUES(?)";
 	String query3 = "DELETE FROM " + CurrentProject.finals + " WHERE CourseCRN = '" + name + "'";
 	ArrayList<Pair> al = null;
 	Statement st = null;
+	PreparedStatement pst = null;
 	try {
 	    st = currentProject.connection.getStatement();
+	    pst = currentProject.connection.getPreparedStatement(query2);
 	    ResultSet rs1 = st.executeQuery(query1);
-	    rs1.next();
-	    int rs1Int = rs1.getInt(1);
-	    name = rs1.getString(2);
-	    st.executeUpdate(query2);
+	    int rs1Int = 0;
+	    if (rs1.next())
+		rs1Int = rs1.getInt(1);
 
+	    if (rs1Int == 0) {
+		pst.setString(1, name);
+		pst.execute();
+	    }
 	    GraphCreation gc = null;
 	    gc = new GraphCreation(currentProject);
 	    Scheduler scheduler = new Scheduler(gc, currentProject);
-	    al = scheduler.findAvailableSlots(scheduler.getCourseMap().get(name));
-	    if (rs1Int == 1)
+	    CourseVertex cv = scheduler.getCourseMap().get(name);
+	    if (cv == null) {
+		System.out.println("something went terribly wrong");
+		return null;
+	    }
+	    al = scheduler.findAvailableSlots(cv);
+	    if (rs1Int == 0)
 		st.executeUpdate(query3);
 	} catch (SQLException e) {
-	    System.out.println(e.getMessage());
 	    return null;
 	} finally {
 	    if (st != null)
@@ -266,11 +277,13 @@ public class APIProject {
     public static String scheduleFinalForTime(String name, int day, int time) {
 	String dbname = CurrentProject.studentsWithInfo;
 	String queryFin = "UPDATE " + dbname + " SET FinalDay = '" + day + "', " + "FinalBlock = '" + time
-		+ "' WHERE CHARINDEX(CourseCRN,'" + name + "')>0";
+		+ "' WHERE CHARINDEX('" + name + "',CourseCRN)>0";
+	String mergeInto = "MERGE INTO " + CurrentProject.finals + " (CourseCRN) VALUES('" + name + "')";
 	Statement st = null;
 	try {
 	    st = currentProject.connection.getStatement();
 	    st.executeUpdate(queryFin);
+	    st.executeUpdate(mergeInto);
 	} catch (SQLException e) {
 	    return "error while attempting to schedule final";
 	} finally {
@@ -296,7 +309,7 @@ public class APIProject {
 
     public static boolean crnInDB(String crn) {
 	String query = "SELECT Count(CourseCRN) FROM " + CurrentProject.courses + " WHERE CourseCRN = '" + crn
-		+ " GROUP BY CourseCRN";
+		+ "' GROUP BY CourseCRN";
 	Statement st = null;
 	int count = 0;
 	try {
@@ -320,7 +333,7 @@ public class APIProject {
 
     public static boolean crnInFinals(String name) {
 	String query = "SELECT Count(CourseCRN) FROM " + CurrentProject.finals + " WHERE CourseCRN = '" + name
-		+ " GROUP BY CourseCRN";
+		+ "' GROUP BY CourseCRN";
 	Statement st = null;
 	int count = 0;
 	try {
@@ -340,6 +353,36 @@ public class APIProject {
 		}
 	}
 	return count > 0;
+    }
+
+    public static int[] getFinalTime(String name) {
+	String queryFin = "SELECT FinalDay, FinalBlock FROM " + CurrentProject.studentsWithInfo + " WHERE CHARINDEX('"
+		+ name + "',CourseCRN)>0";
+	Statement st = null;
+	int[] dayTime = new int[2];
+	try {
+	    st = currentProject.connection.getStatement();
+	    ResultSet rs = st.executeQuery(queryFin);
+
+	    if (rs.next()) {
+		dayTime[0] = rs.getInt(1);
+		dayTime[1] = rs.getInt(2);
+	    } else {
+		return null;
+	    }
+	} catch (SQLException e) {
+	    System.out.println(e.getMessage());
+	    return null;
+	} finally {
+	    if (st != null)
+		try {
+		    st.close();
+		} catch (SQLException e) {
+		    e.printStackTrace();
+		}
+	}
+	return dayTime;
+
     }
 
 }

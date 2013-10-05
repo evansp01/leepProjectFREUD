@@ -38,8 +38,10 @@ public class Scheduler {
      * Creates a scheduler object based on the graph and values from graph
      * creation
      * 
-     * @param gc the graph
-     * @param project the project which provides the settings fileF
+     * @param gc
+     *            the graph
+     * @param project
+     *            the project which provides the settings fileF
      */
     public Scheduler(GraphCreation gc, CurrentProject project) {
 	swg = gc.getGraph();
@@ -52,6 +54,7 @@ public class Scheduler {
 	largeCourse = project.settings.largeConstraint;
 	backToBack = project.settings.backToBack;
 	fresh = true;
+	updateAlreadyScheduled();
 	//at this point call the scheduling thing
     }
 
@@ -106,6 +109,7 @@ public class Scheduler {
 	    cv.clear();
 	for (Student s : sm.values())
 	    s.clear();
+	updateAlreadyScheduled();
 	fresh = true;
 
     }
@@ -136,7 +140,6 @@ public class Scheduler {
 	    if (!result)
 		clear();
 	}
-	System.out.println("" + i + " " + result);
 	if (result)
 	    return i;
 	else
@@ -153,7 +156,7 @@ public class Scheduler {
 	if (!fresh)
 	    clear();
 	fresh = false;
-	updateAlreadyScheduled();
+
 	pq.addAll(cm.values());
 	while (!pq.isEmpty()) {
 	    CourseVertex current = pq.remove();

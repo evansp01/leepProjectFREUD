@@ -23,7 +23,7 @@ public class Console {
 	    return;
 	}
 	path = args[0];
-	System.out.println(args[0]);
+	prl("Documents folder located at " + args[0]);
 	scan = new Scanner(System.in);
 	//either open or create a project, both should have the same result
 	while (true) {
@@ -110,7 +110,7 @@ public class Console {
 	String result = API.printCurrent();
 	if (result != null)
 	    prl(result);
-	System.out.println("Press [ENTER] To Continue");
+	prl("Press [ENTER] To Continue");
 	try {
 	    System.in.read();
 	} catch (IOException e) {
@@ -122,7 +122,7 @@ public class Console {
 	String result = API.printStatistics();
 	if (result != null)
 	    prl(result);
-	System.out.println("Press [ENTER] To Continue");
+	prl("Press [ENTER] To Continue");
 	try {
 	    System.in.read();
 	} catch (IOException e) {
@@ -175,21 +175,29 @@ public class Console {
     }
 
     //TODO this needs some testing
+    //TODO make sure to reschedule if -1 -1
     public static void moveFinal() {
 	try {
 	    prl("Enter the CRN of the course you would like to move");
+	    pr("CRN: ");
 	    String name = scan.nextLine();
 	    if (!API.crnInDB(name) || !API.crnInFinals(name)) {
 		prl("The Class with CRN " + name + " is not currently scheduled so it cannot be moved");
 		return;
 	    }
-	    if (!API.unscheduleFinal(name)) {
-		prl("The Class with CRN " + name + " is not currently scheduled. You must schedule it before moving it");
+	    int[] dayTime = API.getFinalTime(name);
+	    if (dayTime == null) {
+		prl("Could not find the current final time for class with CRN " + name);
 		return;
+	    }
+
+	    if (!API.unscheduleFinal(name)) {
+		prl("Error while unscheduling course with CRN " + name + " attempting to continue...");
 	    }
 	    boolean[][] possibilities = API.listPossibleTimes(name);
 	    int maxDay = API.getDays();
 	    int maxBlock = API.getBlocks();
+	    prl("The current final time for this course is: Day " + (dayTime[0] + 1) + ", Block " + (dayTime[1] + 1));
 	    if (possibilities == null) {
 		prl("Error getting blocks which do not cause conflicts");
 	    } else {
@@ -201,15 +209,17 @@ public class Console {
 			    pr((j + 1) + ". ");
 			}
 		    }
+		    prl();
 		}
 	    }
 	    prl("Enter a day and block of " + name + "'s new final exam or ");
 	    prl("    enter -1 if you do no longer wish to reschedule the exam");
 	    pr("Day: ");
 	    int day = scan.nextInt();
-	    prl("Block: ");
+	    pr("Block: ");
 	    int block = scan.nextInt();
 	    if (day == -1 && block == -1) {
+		API.scheduleFinalForTime(name, dayTime[0], dayTime[1]);
 		prl("Aborting scheduling");
 		return;
 	    }

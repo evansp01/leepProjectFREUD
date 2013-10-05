@@ -11,6 +11,10 @@ import cutilities.StatsPrinter;
 import cutilities.Utilities;
 import databaseForMainProject.DatabaseConnection;
 
+
+//TODO print course number and students number, divide into sections
+//TODO add courses at the same time
+
 /**
  * 
  * 
@@ -64,7 +68,6 @@ public class SchedulerChecking {
 
     }
 
-    //TODO close resources
     /**
      * does statistics on the current schedule and prints them
      * 

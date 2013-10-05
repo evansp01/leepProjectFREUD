@@ -117,6 +117,18 @@ public class DatabaseConnection {
 
     /**
      * 
+     * @param st
+     *            the string to create a prepared statement from
+     * @return returns a prepared statement from the connection
+     * @throws SQLException
+     *             thrown if the connection is not active
+     */
+    public PreparedStatement getPreparedStatement(String st) throws SQLException {
+	return connect.prepareStatement(st);
+    }
+
+    /**
+     * 
      * @return returls the expected delimiter of csv files loaded.
      */
     public String getDelim() {
@@ -401,28 +413,6 @@ public class DatabaseConnection {
 	if (type.toLowerCase().contains("varchar"))
 	    return STRING;
 	return UNRECOGNIZED;
-    }
-
-    /**
-     * a testing method
-     * 
-     * @param args
-     *            parameters are ignored
-     */
-
-    public static void main(String[] args) {
-	String url = "jdbc:h2:~/test";
-	String user = "javauser";
-	String password = "";
-	DatabaseConnection conn = new DatabaseConnection(url, user, password);
-	conn.connect();
-	System.out.println(conn.loadCourseOfferings("/home/evan/Documents/regleep/realTest/courses201209.csv"));
-	System.out.println(conn.getErrorString());
-	System.out.println(conn.loadFinalExams("/home/evan/Documents/regleep/realTest/finals201209.csv"));
-	System.out.println(conn.getErrorString());
-	System.out.println(conn.loadStudentScheudle("/home/evan/Documents/regleep/realTest/students201209.csv"));
-	System.out.println(conn.getErrorString());
-	System.out.println("finished there");
     }
 
 }

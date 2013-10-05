@@ -52,8 +52,6 @@ public class API {
 	    return notValid + " no settings file found";
 
 	String url = CurrentProject.urlStart + f.getAbsolutePath() + File.separator + CurrentProject.dbFileName;
-	if (TESTING)
-	    System.out.println(url);
 	Object result = Settings.parseSettings(settingsFile);
 	if (result instanceof String)
 	    return project + "is not valid due to settings error: " + result;
@@ -144,11 +142,8 @@ public class API {
 	}
 
 	String url;
-	if (TESTING) {
-	    url = CurrentProject.urlStart + "~/test";
-	} else {
-	    url = "jdbc:h2:" + path + File.separator + name + File.separator + CurrentProject.dbFileName;
-	}
+
+	url = "jdbc:h2:" + path + File.separator + name + File.separator + CurrentProject.dbFileName;
 
 	String user = CurrentProject.user;
 	String password = CurrentProject.password;
@@ -160,11 +155,9 @@ public class API {
 		return connection.getErrorString();
 	    if (connection.loadFinalExams(reqs[FINALS].getAbsolutePath()) != 0)
 		return connection.getErrorString();
-	    if (connection.loadStudentScheudle(reqs[COURSES].getAbsolutePath()) != 0)
+	    if (connection.loadStudentScheudle(reqs[STUDENTS].getAbsolutePath()) != 0)
 		return connection.getErrorString();
 	} catch (Exception e) {
-	    if (TESTING)
-		System.out.println(e.getMessage());
 	    if (connection != null)
 		connection.close();
 	    return "error connecting to database: " + e.getMessage();
@@ -181,6 +174,8 @@ public class API {
 	Scheduler scheduler = new Scheduler(gc, cp);
 	if (scheduler.schedule() == Scheduler.FAILURE)
 	    return "Could not find a valid schedule for this project";
+	CreateFinalTable.updateExams(connection, scheduler.getCourseMap());
+
 	APIProject.setProject(cp);
 
 	return null;
@@ -229,11 +224,11 @@ public class API {
     }
 
     public static String printStatistics() {
-	return API.printStatistics();
+	return APIProject.printStatistics();
     }
 
     public static String scheduleNewFinals(String file) {
-	return API.scheduleNewFinals(file);
+	return APIProject.scheduleNewFinals(file);
     }
 
     public static String printCurrent() {
@@ -246,6 +241,10 @@ public class API {
 
     public static boolean crnInFinals(String name) {
 	return APIProject.crnInFinals(name);
+    }
+
+    public static int[] getFinalTime(String name) {
+	return APIProject.getFinalTime(name);
     }
 
 }
