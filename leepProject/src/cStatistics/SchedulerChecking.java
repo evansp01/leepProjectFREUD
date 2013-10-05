@@ -3,18 +3,19 @@ package cStatistics;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+import consoleThings.Console;
 import consoleThings.Settings;
 import cutilities.StatsPrinter;
 import cutilities.Utilities;
 import databaseForMainProject.DatabaseConnection;
 
-
 //TODO print course number and students number, divide into sections
 //TODO add courses at the same time
-
+//TODO add three in a day
 /**
  * 
  * 
@@ -31,9 +32,10 @@ public class SchedulerChecking {
      *            name of table
      * @param sett
      *            settings file
+     * @param withPauses
      * @throws SQLException
      */
-    public static boolean printSchedule(DatabaseConnection conn, String tableName, Settings sett) {
+    public static boolean printSchedule(DatabaseConnection conn, String tableName, Settings sett, boolean withPauses) {
 	int day = sett.days, block = sett.blocks;
 	Statement sts[] = new Statement[block];
 	ResultSet[] dayRS = new ResultSet[block];
@@ -53,6 +55,8 @@ public class SchedulerChecking {
 		}
 		crossList = Utilities.printDay(dayRS, i, crossList);
 		System.out.println();
+		if (withPauses)
+		    Console.enterToCont();
 
 	    }
 	} catch (SQLException e) {
@@ -74,9 +78,10 @@ public class SchedulerChecking {
      * @param conn
      * @param tableName
      * @param sett
+     * @param withPauses
      * @throws SQLException
      */
-    public static boolean stats(DatabaseConnection conn, String tableName, Settings sett) {
+    public static boolean stats(DatabaseConnection conn, String tableName, Settings sett, boolean withPauses) {
 	StatsPrinter sp = new StatsPrinter();
 	Statement st1 = null;
 	Statement st2 = null;
@@ -85,7 +90,7 @@ public class SchedulerChecking {
 	    st1 = conn.getStatement();
 	    st2 = conn.getStatement();
 	    examDistribution(st1, tableName, sett, sp);
-	    studentDistribution(st1, st2, tableName, sett, sp);
+	    studentDistribution(st1, st2, tableName, sett, sp, withPauses);
 	} catch (SQLException e) {
 	    return false;
 	} finally {
@@ -129,8 +134,9 @@ public class SchedulerChecking {
 	String query1 = "SELECT DISTINCT CourseCRN, FinalDay, FinalBlock, ActualEnroll FROM " + tableName
 		+ " WHERE FinalDay != -1";
 	ResultSet rs1 = st.executeQuery(query1);
-
+	int numCourses = 0;
 	while (rs1.next()) {
+	    numCourses++;
 	    int fday = rs1.getInt(2);
 	    int fblock = rs1.getInt(3);
 	    int enroll = rs1.getInt(4);
@@ -141,6 +147,9 @@ public class SchedulerChecking {
 	    }
 
 	}
+	//TODO print num courses
+	sp.printSectionHeader("Course Statistics");
+	sp.printNumSomething(numCourses, "courses with finals");
 	sp.printSectionHeader("Number of exams in each day and block");
 	sp.printDayBlock2DIntArray(examsPerDayBlock, days, blocks);
 	sp.printSectionHeader("Number of large exams in each day and block");
@@ -155,10 +164,11 @@ public class SchedulerChecking {
      * @param swf
      * @param sett
      * @param sp
+     * @param withPauses
      * @throws SQLException
      */
-    public static void studentDistribution(Statement st, Statement st2, String swf, Settings sett, StatsPrinter sp)
-	    throws SQLException {
+    public static void studentDistribution(Statement st, Statement st2, String swf, Settings sett, StatsPrinter sp,
+	    boolean withPauses) throws SQLException {
 	int days = sett.days;
 	int blocks = sett.blocks;
 
@@ -176,11 +186,18 @@ public class SchedulerChecking {
 	StringBuilder listOf3Conflicts = new StringBuilder();
 	int[] conflicts = new int[2];
 	int[][] backToBackByDayBlock = new int[days][blocks];
+	@SuppressWarnings("unchecked")
+	ArrayList<String>[][] realConflicts = new ArrayList[days][blocks];
+	for (int i = 0; i < days; i++)
+	    for (int j = 0; j < blocks; j++)
+		realConflicts[i][j] = new ArrayList<String>();
+	StringBuilder realConflictsString = new StringBuilder();
 
 	String query1 = "SELECT DISTINCT StudentIDNo FROM " + swf;
 	ResultSet rs1 = st.executeQuery(query1);
-
+	int numStudents = 0;
 	while (rs1.next()) {
+	    numStudents++;
 	    String id = rs1.getString(1);
 	    String query2 = "SELECT DISTINCT CourseCRN, FinalDay, FinalBlock FROM " + swf + " WHERE StudentIDNo = '"
 		    + id + "' AND FinalDay != '-1'";
@@ -190,8 +207,15 @@ public class SchedulerChecking {
 		String crn = rs2.getString(1);
 		int fday = rs2.getInt(2);
 		int fblock = rs2.getInt(3);
-		if (fday != -1)
+		if (fday != -1) {
+		    if (exams[fday][fblock] != null) {
+			if (realConflicts[fday][fblock].size() == 0) {
+			    realConflicts[fday][fblock].add(exams[fday][fblock]);
+			}
+			realConflicts[fday][fblock].add(crn);
+		    }
 		    exams[fday][fblock] = crn;
+		}
 	    }
 	    rs2.close();
 
@@ -260,12 +284,16 @@ public class SchedulerChecking {
 		conflicts[0] += backToBack.size();
 		conflicts[1] += triple.size();
 		//create detailed lists
-		for (String[] s : backToBack)
+		for (String[] s : backToBack) {
 		    listOf2Conflicts.append("Student " + id + " has a back to back conflict with " + s[0] + " and "
-			    + s[1] + "\n");
-		for (String[] s : triple)
+			    + s[1]);
+		    listOf2Conflicts.append(System.getProperty("line.separator"));
+		}
+		for (String[] s : triple) {
 		    listOf3Conflicts.append("Student " + id + " has a three in a row conflict with " + s[0] + ", "
-			    + s[1] + " and " + s[2] + "\n");
+			    + s[1] + " and " + s[2]);
+		    listOf3Conflicts.append(System.getProperty("line.separator"));
+		}
 		//back to back per student
 		int size = backToBack.size();
 		if (backToBackPerStudent.containsKey(size)) {
@@ -273,12 +301,31 @@ public class SchedulerChecking {
 		} else {
 		    backToBackPerStudent.put(size, 1);
 		}
+		//conflicts for each student
+		for (int i = 0; i < days; i++)
+		    for (int j = 0; j < blocks; j++) {
+			if (realConflicts[i][j].size() > 0) {
+			    realConflictsString.append("More than one exam at a time for student " + id + " CRNs "
+				    + realConflicts[i][j].toString());
+			    realConflictsString.append(System.getProperty("line.separator"));
+			    realConflicts[i][j].clear();
+			}
+		    }
 	    }
 
 	}
 	rs1.close();
+	//TODO 
+	//print num students
+	//print realConflicts
 	//end of large while loop
 	//printing a large number of things	
+	if (withPauses)
+	    Console.enterToCont();
+	sp.printSectionHeader("Student Statistics");
+	sp.printNumSomething(numStudents, "students with finals");
+	sp.printSectionHeader("Students with conflicting exams");
+	sp.printList(realConflictsString.toString(), 1);
 	sp.printSectionHeader("Number of students with exams in each day and block");
 	sp.printDayBlock2DIntArray(studentsWithExamsInDayBlock, days, blocks);
 	sp.printSectionHeader("Students with N exams in a day");

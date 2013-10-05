@@ -45,12 +45,12 @@ public class CourseVertex implements Comparable<CourseVertex> {
 	favorableSlots = days * blocks;
     }
 
-    public void clear() {
+    public void clear(int tolerance) {
 	for (int[] d : degreeOfConflict)
 	    Arrays.fill(d, 0);
 	day = -1;
 	block = -1;
-	updateAvailability();
+	updateAvailability(tolerance);
     }
 
     public void setDegrees(DependenciesGraph<String, DependentEdge> g) {
@@ -212,14 +212,14 @@ public class CourseVertex implements Comparable<CourseVertex> {
      * updates the parameters for this courses sorting methods based on its
      * degreeOfConflict array
      */
-    public void updateAvailability() {
+    public void updateAvailability(int tolerance) {
 	acceptableSlots = 0;
 	favorableSlots = 0;
 	for (int day = 0; day < degreeOfConflict.length; day++) {
 	    for (int block = 0; block < degreeOfConflict[0].length; block++) {
 		if (degreeOfConflict[day][block] != THREE_IN_DAY) { //-1 means totally unacceptable - meaning three exams in a row for some student 
 		    acceptableSlots++;
-		    if (degreeOfConflict[day][block] < Settings.MAX_BACK_TO_BACK) //as long as no more than 2 people have b2b exams, consider it favorable 
+		    if (degreeOfConflict[day][block] < tolerance) //as long as no more than 2 people have b2b exams, consider it favorable 
 			favorableSlots++;
 		}
 	    }

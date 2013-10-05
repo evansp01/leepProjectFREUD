@@ -29,6 +29,8 @@ public class Scheduler {
     private PriorityQueue<CourseVertex> pq;
     private ArrayList<PreScheduledExam> as;
 
+    private int tolerance;
+    private int largeCourseValue;
     private int days, blocks;
     private boolean largeCourse;
     private boolean[][] backToBack;
@@ -53,6 +55,8 @@ public class Scheduler {
 	blocks = project.settings.blocks;
 	largeCourse = project.settings.largeConstraint;
 	backToBack = project.settings.backToBack;
+	tolerance = project.settings.tolerance;
+	largeCourseValue = project.settings.largeCourse;
 	fresh = true;
 	updateAlreadyScheduled();
 	//at this point call the scheduling thing
@@ -106,22 +110,12 @@ public class Scheduler {
      */
     private void clear() {
 	for (CourseVertex cv : cm.values())
-	    cv.clear();
+	    cv.clear(tolerance);
 	for (Student s : sm.values())
 	    s.clear();
 	updateAlreadyScheduled();
 	fresh = true;
 
-    }
-
-    /**
-     * Attempt to schedule with the default number of retries
-     * 
-     * @return result the number of times it took to find a successful schedule
-     *         (result<0 indicates failure)
-     */
-    public int schedule() {
-	return schedule(1000);
     }
 
     /**
@@ -180,7 +174,7 @@ public class Scheduler {
     private boolean scheduleCourse(CourseVertex cv) {
 	ArrayList<Pair> acceptableSlots;
 	//get available slots
-	acceptableSlots = findAvailableSlots(cv);
+	acceptableSlots = findAvailableSlots(cv, tolerance, largeCourse);
 
 	if (acceptableSlots.isEmpty()) {
 	    return false;
@@ -217,7 +211,7 @@ public class Scheduler {
 		DependentEdge edge = swg.getEdge(cv.name(), course.name());
 
 		updateStudentsAndCourses(course, edge, foundDay, foundBlock);
-		course.updateAvailability();
+		course.updateAvailability(tolerance);
 
 		pq.add(course); //add back course to priority queue
 	    }
@@ -266,7 +260,7 @@ public class Scheduler {
      * @param cv
      * @return
      */
-    public ArrayList<Pair> findAvailableSlots(CourseVertex cv) {
+    public ArrayList<Pair> findAvailableSlots(CourseVertex cv, int backToBack, boolean largeCourse) {
 	int[][] degreeOfConflicts = cv.degreeOfConflict(); //gives the chart of acceptable and favorable exam times  
 	int dayIt, blockIt; //variables to iterate through days and blocks 
 	dayIt = 0;
@@ -277,8 +271,8 @@ public class Scheduler {
 	    while (blockIt < blocks) {
 		int conflict = degreeOfConflicts[dayIt][blockIt];
 		//found an acceptable slot
-		if (conflict != CourseVertex.THREE_IN_DAY && conflict < Settings.MAX_BACK_TO_BACK) {
-		    if (largeCourse && cv.getEnrollment() >= Settings.LARGE) { //if large constraint is enabled
+		if (conflict != CourseVertex.THREE_IN_DAY && conflict < backToBack) {
+		    if (largeCourse && cv.getEnrollment() >= largeCourseValue) { //if large constraint is enabled
 			if (dayIt <= days / 2)
 			    acceptableTimes.add(new Pair(dayIt, blockIt));
 		    } else {

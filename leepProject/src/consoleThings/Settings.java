@@ -16,10 +16,13 @@ import java.util.ArrayList;
 public class Settings {
     public final int days;
     public final int blocks;
+    public final int tolerance;
+    public final int retries;
+    public final int largeCourse;
     public final boolean largeConstraint;
     public final boolean facultyConstraint;
     public final boolean[][] backToBack;
-    public static final int MAX_BACK_TO_BACK = 1, LARGE = 50;
+    public static final int MAX_BACK_TO_BACK = 5, LARGE = 50;
     public static final int MAX_EXAM_PER_DAY = 2;
 
     /**
@@ -31,12 +34,16 @@ public class Settings {
      * @param facultyConstraint
      * @param backToBack
      */
-    public Settings(int days, int blocks, boolean largeConstraint, boolean facultyConstraint, boolean[][] backToBack) {
+    public Settings(int days, int blocks, boolean largeConstraint, boolean facultyConstraint, boolean[][] backToBack,
+	    int tolerance, int retries, int largeCourse) {
 	this.days = days;
 	this.blocks = blocks;
 	this.largeConstraint = largeConstraint;
 	this.facultyConstraint = facultyConstraint;
 	this.backToBack = backToBack;
+	this.tolerance = tolerance;
+	this.retries = retries;
+	this.largeCourse = largeCourse;
     }
 
     public static boolean isBackToBack(int block1, int block2, Settings s) {
@@ -52,10 +59,13 @@ public class Settings {
      */
     public static Object parseSettings(File settingsFile) {
 	BufferedReader settingsReader = null;
+	int retries = 5000;
 	int days = -1;
 	int blocks = -1;
 	int facConstraint = -1;
 	int largeConstraint = -1;
+	int tolerance = 5;
+	int largeCourse = 40;
 	ArrayList<int[]> backToBack = new ArrayList<>();
 	boolean[][] backToBackArray = null;
 
@@ -106,6 +116,14 @@ public class Settings {
 		    else
 			return "unexpected value for LARGEEXAMCONSTRAINT on line " + lineNum;
 		    break;
+		case "backtobacktolerance":
+		    tolerance = Integer.parseInt(value);
+		    break;
+		case "retries":
+		    retries = Integer.parseInt(value);
+		    break;
+		case "largecourse":
+		    largeCourse = Integer.parseInt(value);
 		default:
 		    return "unexpected label on line " + lineNum;
 		}
@@ -129,6 +147,12 @@ public class Settings {
 	    return "EXAMDAYS must be defined as a positive integer";
 	if (blocks <= 0)
 	    return "EXAMBLOCKS must be defined as a positive integer";
+	if (retries <= 0)
+	    return "RETRIES must be a positive integer";
+	if (tolerance <= 0)
+	    return "BACKTOBACKTOLERANCE must be a positive integer";
+	if (largeCourse <= 0)
+	    return "LARGECOURSE must be a positive integer";
 	if (!(facConstraint == 0 || facConstraint == 1))
 	    return "FACULTYCONSTRAINT must be defined as TRUE or FALSE";
 	if (!(largeConstraint == 0 || largeConstraint == 1))
@@ -142,8 +166,8 @@ public class Settings {
 	    backToBackArray[btb[0] - 1][btb[1] - 1] = true;
 	    backToBackArray[btb[1] - 1][btb[0] - 1] = true;
 	}
-	Settings settings = new Settings(days, blocks, largeConstraint == 1, facConstraint == 1, backToBackArray);
+	Settings settings = new Settings(days, blocks, largeConstraint == 1, facConstraint == 1, backToBackArray,
+		tolerance, retries, largeCourse);
 	return settings;
     }
-
 }

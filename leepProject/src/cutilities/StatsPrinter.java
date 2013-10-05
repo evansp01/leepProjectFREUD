@@ -38,6 +38,10 @@ public class StatsPrinter {
 	    form.close();
     }
 
+    public void printNumSomething(int num, String something) {
+	prl("Number of " + something + ": " + num);
+    }
+
     public void printSectionHeader(String header) {
 	prl();
 	prl(header);
@@ -45,10 +49,17 @@ public class StatsPrinter {
 
     public void printList(String list, int inRow) {
 	if (list.length() == 0) {
-	    if (inRow == 2)
-		prl("No Students With Back To Back Finals");
-	    else
-		prl("No Students With Three Finals In A Row");
+	    switch (inRow) {
+	    case 1:
+		prl("No students with same time conflicts");
+		break;
+	    case 2:
+		prl("No students with back to back finals");
+		break;
+	    case 3:
+		prl("No students with three finals in a row");
+		break;
+	    }
 	} else
 	    pr(list);
     }

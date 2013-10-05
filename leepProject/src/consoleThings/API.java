@@ -184,11 +184,16 @@ public class API {
 	try {
 	    gc = new GraphCreation(cp);
 	} catch (SQLException e) {
+	    if (connection != null)
+		connection.close();
 	    return "Error during graph creation: this shouldn't happen";
 	}
 	Scheduler scheduler = new Scheduler(gc, cp);
-	if (scheduler.schedule() == Scheduler.FAILURE)
+	if (scheduler.schedule(settings.retries) == Scheduler.FAILURE) {
+	    if (connection != null)
+		connection.close();
 	    return "Could not find a valid schedule for this project";
+	}
 	CreateFinalTable.updateExams(connection, scheduler.getCourseMap());
 
 	APIProject.setProject(cp);
@@ -238,16 +243,16 @@ public class API {
 	return APIProject.exportToFile(file);
     }
 
-    public static String printStatistics() {
-	return APIProject.printStatistics();
+    public static String printStatistics(boolean withPauses) {
+	return APIProject.printStatistics(withPauses);
     }
 
     public static String scheduleNewFinals(String file) {
 	return APIProject.scheduleNewFinals(file);
     }
 
-    public static String printCurrent() {
-	return APIProject.printCurrent();
+    public static String printCurrent(boolean withPauses) {
+	return APIProject.printCurrent(withPauses);
     }
 
     public static boolean crnInDB(String name) {

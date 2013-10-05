@@ -38,7 +38,7 @@ public class TestClass {
 	conn.loadStudentScheudle("/home/evan/Documents/regleep/realTest/students201209.csv");
 	System.out.println(x++);
 	boolean[][] array = new boolean[4][4];
-	Settings sett = new Settings(4, 4, true, true, array);
+	Settings sett = new Settings(4, 4, true, true, array, 5, 5000, 40);
 	CurrentProject project = new CurrentProject("testProject", sett, conn);
 
 	CreateFinalTable.maintainTables(project.connection);
@@ -50,7 +50,7 @@ public class TestClass {
 	    e.printStackTrace();
 	}
 	Scheduler s = new Scheduler(gc, project);
-	s.schedule();
+	s.schedule(5000);
 	HashMap<String, CourseVertex> schedule = s.getCourseMap();
 	//	for (CourseVertex cv : schedule.values())
 	//	    System.out.println(cv.name() + "|" + cv.day() + "," + cv.block());

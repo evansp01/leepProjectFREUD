@@ -95,7 +95,7 @@ public class APIProject {
 	    return "Error during graph creation: this shouldn't happen";
 	}
 	Scheduler scheduler = new Scheduler(gc, currentProject);
-	if (scheduler.schedule() == Scheduler.FAILURE)
+	if (scheduler.schedule(currentProject.settings.retries) == Scheduler.FAILURE)
 	    return "Could not find a valid schedule for this project";
 	CreateFinalTable.updateExams(currentProject.connection, scheduler.getCourseMap());
 	if (sb.toString().length() > 0)
@@ -107,11 +107,14 @@ public class APIProject {
     /**
      * Prints the current schedule
      * 
+     * @param withPauses
+     * 
      * @return null on no error, error string on success
      */
-    public static String printCurrent() {
+    public static String printCurrent(boolean withPauses) {
 	Settings sett = currentProject.settings;
-	if (!SchedulerChecking.printSchedule(currentProject.connection, CurrentProject.studentsWithInfo, sett))
+	if (!SchedulerChecking.printSchedule(currentProject.connection, CurrentProject.studentsWithInfo, sett,
+		withPauses))
 	    return "Error while printing schedule: ";
 	return null;
 
@@ -119,12 +122,13 @@ public class APIProject {
 
     /**
      * 
+     * @param withPauses
      * @return
      */
-    public static String printStatistics() {
+    public static String printStatistics(boolean withPauses) {
 	Settings sett = currentProject.settings;
 
-	if (!SchedulerChecking.stats(currentProject.connection, CurrentProject.studentsWithInfo, sett))
+	if (!SchedulerChecking.stats(currentProject.connection, CurrentProject.studentsWithInfo, sett, withPauses))
 	    return "Error while printing statistics: ";
 	return null;
 
@@ -251,7 +255,8 @@ public class APIProject {
 		System.out.println("something went terribly wrong");
 		return null;
 	    }
-	    al = scheduler.findAvailableSlots(cv);
+	    //make it very tolerant
+	    al = scheduler.findAvailableSlots(cv, Integer.MAX_VALUE, false);
 	    if (rs1Int == 0)
 		st.executeUpdate(query3);
 	} catch (SQLException e) {

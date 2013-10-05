@@ -107,26 +107,17 @@ public class Console {
     }
 
     private static void printCurrent() {
-	String result = API.printCurrent();
+	String result = API.printCurrent(true);
 	if (result != null)
 	    prl(result);
-	prl("Press [ENTER] To Continue");
-	try {
-	    System.in.read();
-	} catch (IOException e) {
-	}
 
     }
 
     private static void printStatistics() {
-	String result = API.printStatistics();
+	String result = API.printStatistics(true);
 	if (result != null)
 	    prl(result);
-	prl("Press [ENTER] To Continue");
-	try {
-	    System.in.read();
-	} catch (IOException e) {
-	}
+	enterToCont();
 
     }
 
@@ -174,8 +165,6 @@ public class Console {
 
     }
 
-    //TODO this needs some testing
-    //TODO make sure to reschedule if -1 -1
     public static void moveFinal() {
 	try {
 	    prl("Enter the CRN of the course you would like to move");
@@ -255,7 +244,7 @@ public class Console {
 	prl("What would you like to do?");
 	prl("\t" + NEW_FINAL + " -- Schedule finals for a group of unscheduled courses");
 	prl("\t" + MOVE_FINAL + " -- Move a currently scheduled final to a new time manually");
-	prl("\t" + DELETE_FINAL + " -- Unschedule a currently scheduled final");
+	prl("\t" + DELETE_FINAL + " -- Unschedule a currently scheduled finals");
 	prl("\t" + PRINT_CURRENT + " -- Display the current schedule");
 	prl("\t" + PRINT_STATS + " -- Display statistics about the current schedule");
 	prl("\t" + EXPORT + " -- Export the schedule to a file");
@@ -278,35 +267,31 @@ public class Console {
 
     private static boolean loadExistingProject() {
 	String project = NO_STRING;
-	while (true) {
-	    prl("Enter the name of the project you wish to open");
-	    pr("Name: ");
-	    try {
-		project = scan.nextLine();
-	    } catch (Exception e) {
-		project = NO_STRING;
-	    }
-
-	    String result = API.projectExists(project, path);
-	    if (result == null) {
-		prl("Project successfully opened");
-		break;
-	    }
-
-	    else
-		prl("Error: " + result);
-	    prl("Sorry the project at " + project + " could not be opened");
-	    prl();
-	    if (!doYouWantToContinue())
-		return GO_BACK;
+	prl("Enter the name of the project you wish to open");
+	pr("Name: ");
+	try {
+	    project = scan.nextLine();
+	} catch (Exception e) {
+	    project = NO_STRING;
 	}
-	return SUCCESS;
+
+	String result = API.projectExists(project, path);
+	if (result == null) {
+	    prl("Project successfully opened");
+	    return true;
+	}
+
+	prl("Error: " + result);
+	prl("Sorry the project at " + project + " could not be opened");
+	prl();
+
+	return false;
     }
 
     private static boolean createNewProject() {
 	String name = NO_STRING;
 	while (true) {
-	    prl("Enter the name/path for your new project");
+	    prl("Enter the name for your new project");
 	    pr("Name: ");
 	    try {
 		name = scan.nextLine();
@@ -391,6 +376,16 @@ public class Console {
 	    prl("Please enter \"" + CREATE_NEW + "\" or \"" + LOAD_EXISTING + "\" or \"" + QUIT + "\"");
 	}
 	return option;
+
+    }
+
+    public static void enterToCont() {
+	prl();
+	prl("Press [ENTER] To Continue");
+	try {
+	    System.in.read();
+	} catch (IOException e) {
+	}
 
     }
 

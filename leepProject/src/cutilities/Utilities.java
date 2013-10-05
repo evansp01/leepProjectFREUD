@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
+import org.h2.store.fs.FileUtils;
+
 /**
  * 
  * 
@@ -109,6 +111,25 @@ public class Utilities {
 		destination.close();
 	    }
 	}
+    }
+
+    /**
+     * A recursive method to delete an existing directory
+     * 
+     * @param rootDir
+     */
+    public static void deleteDir(File rootDir) {
+	File[] childDirs = rootDir.listFiles();
+	for (int i = 0; i < childDirs.length; i++) {
+	    if (childDirs[i].isFile()) {
+		childDirs[i].delete();
+	    } else {
+		deleteDir(childDirs[i]);
+		childDirs[i].delete();
+	    }
+	}
+	rootDir.delete();
+
     }
 
 }
