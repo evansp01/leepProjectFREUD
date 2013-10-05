@@ -57,8 +57,11 @@ public class API {
 	    return project + "is not valid due to settings error: " + result;
 
 	DatabaseConnection connection = new DatabaseConnection(url, CurrentProject.user, CurrentProject.password);
-	if (!connection.connect())
+	if (!connection.connect()) {
+	    if (connection != null)
+		connection.close();
 	    return notValid + " error loading database";
+	}
 	CurrentProject cp = new CurrentProject(project, (Settings) result, connection);
 	APIProject.setProject(cp);
 	return null;
