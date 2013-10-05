@@ -1,4 +1,4 @@
-package czexamSchedulingFinal;
+package scheduling;
 
 import java.util.ArrayList;
 
@@ -7,8 +7,8 @@ import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.Random;
 
-import consoleThings.CurrentProject;
-import consoleThings.Settings;
+import console.CurrentProject;
+import console.Settings;
 
 /**
  * Attempts to generate a schedule matching the settings given in the input

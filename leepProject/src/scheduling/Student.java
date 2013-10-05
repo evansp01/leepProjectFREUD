@@ -1,4 +1,4 @@
-package czexamSchedulingFinal;
+package scheduling;
 
 import java.util.Arrays;
 

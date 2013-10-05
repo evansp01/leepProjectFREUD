@@ -1,4 +1,4 @@
-package czexamSchedulingFinal;
+package scheduling;
 
 /**
  * A class to hold the day,block,and time of an already scheduled exam

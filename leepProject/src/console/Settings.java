@@ -1,4 +1,4 @@
-package consoleThings;
+package console;
 
 import java.io.BufferedReader;
 import java.io.File;

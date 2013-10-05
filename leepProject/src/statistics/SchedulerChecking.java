@@ -1,4 +1,4 @@
-package cStatistics;
+package statistics;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,11 +7,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import consoleThings.Console;
-import consoleThings.Settings;
-import cutilities.StatsPrinter;
-import cutilities.Utilities;
-import databaseForMainProject.DatabaseConnection;
+import utilities.StatsPrinter;
+import utilities.Utilities;
+
+import console.Console;
+import console.Settings;
+import database.DatabaseConnection;
 
 //TODO print course number and students number, divide into sections
 //TODO add courses at the same time

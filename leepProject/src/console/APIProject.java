@@ -1,4 +1,4 @@
-package consoleThings;
+package console;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,14 +8,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 
-import cStatistics.SchedulerChecking;
-import cutilities.Exporter;
-import czexamSchedulingFinal.CourseVertex;
-import czexamSchedulingFinal.GraphCreation;
-import czexamSchedulingFinal.Pair;
-import czexamSchedulingFinal.Scheduler;
-import databaseForMainProject.CreateFinalTable;
-import databaseForMainProject.DatabaseConnection;
+import scheduling.CourseVertex;
+import scheduling.GraphCreation;
+import scheduling.Pair;
+import scheduling.Scheduler;
+import statistics.SchedulerChecking;
+import utilities.Exporter;
+
+import database.CreateFinalTable;
+import database.DatabaseConnection;
 
 public class APIProject {
     private static CurrentProject currentProject;

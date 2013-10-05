@@ -1,4 +1,4 @@
-package czexamSchedulingFinal;
+package scheduling;
 //Pair class for holding final exam schedule pairs
 /**
  * 

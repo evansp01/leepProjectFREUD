@@ -1,4 +1,4 @@
-package databaseForMainProject;
+package database;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
-import consoleThings.CurrentProject;
+import console.CurrentProject;
 
 /**
  * 

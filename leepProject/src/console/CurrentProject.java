@@ -1,6 +1,6 @@
-package consoleThings;
+package console;
 
-import databaseForMainProject.DatabaseConnection;
+import database.DatabaseConnection;
 /**
  * A class to keep track of information relevant to the current project.
  * Also has constants with the default names of various tables and files in the projectF

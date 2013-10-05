@@ -1,14 +1,15 @@
-package consoleThings;
+package console;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import cutilities.Utilities;
-import czexamSchedulingFinal.GraphCreation;
-import czexamSchedulingFinal.Scheduler;
-import databaseForMainProject.CreateFinalTable;
-import databaseForMainProject.DatabaseConnection;
+import scheduling.GraphCreation;
+import scheduling.Scheduler;
+import utilities.Utilities;
+
+import database.CreateFinalTable;
+import database.DatabaseConnection;
 
 /**
  * 

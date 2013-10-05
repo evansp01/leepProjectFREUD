@@ -1,4 +1,4 @@
-package consoleThings;
+package console;
 
 import java.io.IOException;
 import java.util.Scanner;

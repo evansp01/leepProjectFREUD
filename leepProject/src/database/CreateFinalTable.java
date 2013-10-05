@@ -1,4 +1,4 @@
-package databaseForMainProject;
+package database;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,9 +7,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import consoleThings.CurrentProject;
+import scheduling.CourseVertex;
 
-import czexamSchedulingFinal.CourseVertex;
+import console.CurrentProject;
+
 
 /**
  * 

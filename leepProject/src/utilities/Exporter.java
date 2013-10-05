@@ -1,4 +1,4 @@
-package cutilities;
+package utilities;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -9,9 +9,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Formatter;
 
-import consoleThings.CurrentProject;
-import consoleThings.Settings;
-import databaseForMainProject.DatabaseConnection;
+import console.CurrentProject;
+import console.Settings;
+import database.DatabaseConnection;
 
 /**
  * 

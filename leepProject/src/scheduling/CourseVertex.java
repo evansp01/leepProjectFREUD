@@ -1,8 +1,6 @@
-package czexamSchedulingFinal;
+package scheduling;
 
 import java.util.Arrays;
-
-import consoleThings.Settings;
 
 /**
  * holds addition information for courses including crn, degree, weighted
