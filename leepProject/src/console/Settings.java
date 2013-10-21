@@ -124,6 +124,7 @@ public class Settings {
 		    break;
 		case "largecourse":
 		    largeCourse = Integer.parseInt(value);
+		    break;
 		default:
 		    return "unexpected label on line " + lineNum;
 		}

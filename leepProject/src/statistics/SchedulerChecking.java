@@ -274,7 +274,7 @@ public class SchedulerChecking {
 		LinkedList<String[]> triple = new LinkedList<String[]>();
 		for (int i = 0; i < days; i++) {
 		    for (int j = 2; j < blocks; j++) {
-			if (exams[i][j - 1] != null && exams[i][j] != null && exams[i][j] != null)
+			if (exams[i][j - 2] != null && exams[i][j-1] != null && exams[i][j] != null)
 			    if (Settings.isBackToBack(j - 2, j - 1, sett) && Settings.isBackToBack(j - 1, j, sett)) {
 				String[] b2b = { exams[i][j - 2], exams[i][j - 1], exams[i][j] };
 				triple.add(b2b);
